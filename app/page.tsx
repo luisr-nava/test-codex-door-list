@@ -27,6 +27,7 @@ const emptyEvent = {
   starts_at: "",
   venue: "",
   max_capacity: "",
+  status: "draft" as Event["status"],
 };
 
 function toLocalDateTime(value: string) {
@@ -117,6 +118,7 @@ export default function Home() {
       starts_at: toLocalDateTime(event.starts_at),
       venue: event.venue,
       max_capacity: String(event.max_capacity),
+      status: event.status,
     });
     setTicketForm({ id: "", name: "", max_capacity: "" });
     setMessage("");
@@ -153,6 +155,7 @@ export default function Home() {
       starts_at: new Date(eventForm.starts_at).toISOString(),
       venue: eventForm.venue.trim(),
       max_capacity: Number(eventForm.max_capacity),
+      status: eventForm.status,
     };
     const result = selectedEvent
       ? await supabase.from("events").update(payload).eq("id", selectedEvent.id)
@@ -177,19 +180,6 @@ export default function Home() {
       await loadOrganizerData();
       startNewEvent();
       setMessage("Evento eliminado.");
-    }
-  }
-
-  async function publishEvent() {
-    if (!selectedEvent) return;
-    setSaving(true);
-    const status = selectedEvent.status === "published" ? "draft" : "published";
-    const { error } = await supabase.from("events").update({ status }).eq("id", selectedEvent.id);
-    setSaving(false);
-    if (error) setMessage(readableError(error));
-    else {
-      await loadOrganizerData();
-      setMessage(status === "published" ? "Evento publicado." : "Evento devuelto a borrador.");
     }
   }
 
@@ -268,8 +258,8 @@ export default function Home() {
             <label className="mt-5 block text-sm">Título<input required value={eventForm.title} onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })} className="field" /></label>
             <label className="mt-4 block text-sm">Descripción<textarea required value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} className="field min-h-24 resize-y" /></label>
             <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="text-sm">Fecha y hora<input required type="datetime-local" value={eventForm.starts_at} onChange={(e) => setEventForm({ ...eventForm, starts_at: e.target.value })} className="field" /></label><label className="text-sm">Lugar<input required value={eventForm.venue} onChange={(e) => setEventForm({ ...eventForm, venue: e.target.value })} className="field" /></label></div>
-            <label className="mt-4 block text-sm">Aforo máximo del evento<input required min="1" type="number" value={eventForm.max_capacity} onChange={(e) => setEventForm({ ...eventForm, max_capacity: e.target.value })} className="field" /></label>
-            <div className="mt-6 flex flex-wrap gap-3"><button disabled={saving} className="primary-button">{saving ? "Guardando…" : "Guardar evento"}</button>{selectedEvent && <><button type="button" disabled={saving} onClick={publishEvent} className="secondary-button">{selectedEvent.status === "published" ? "Pasar a borrador" : "Publicar"}</button><button type="button" disabled={saving} onClick={removeEvent} className="text-sm text-red-300 hover:text-red-200">Eliminar</button></>}</div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="text-sm">Aforo máximo del evento<input required min="1" type="number" value={eventForm.max_capacity} onChange={(e) => setEventForm({ ...eventForm, max_capacity: e.target.value })} className="field" /></label><label className="text-sm">Estado<select value={eventForm.status} onChange={(e) => setEventForm({ ...eventForm, status: e.target.value as Event["status"] })} className="field"><option value="draft">Borrador</option><option value="published">Publicado</option></select></label></div>
+            <div className="mt-6 flex flex-wrap gap-3"><button disabled={saving} className="primary-button">{saving ? "Guardando…" : "Guardar evento"}</button>{selectedEvent && <button type="button" disabled={saving} onClick={removeEvent} className="text-sm text-red-300 hover:text-red-200">Eliminar</button>}</div>
           </form>
           <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-bold">Tipos de entrada</h2>
