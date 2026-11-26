@@ -1,0 +1,15 @@
+{
+  "buildPath": "code",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-11-26T13:30:19.422Z",
+        "reason": "door-list-ui contract specifies Arial, Helvetica, sans-serif as the global font"
+      }
+    ]
+  }
+}
