@@ -26,10 +26,10 @@ export default async function PublicRegistrationPage({
       <div className="mx-auto max-w-6xl">
         <header className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-300">Door List</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-300">Door List</p>
             <p className="mt-1 text-sm text-zinc-500">Registro de asistentes</p>
           </div>
-          <span className="rounded-full border border-emerald-300/20 bg-emerald-300/[0.07] px-3 py-1.5 text-sm font-medium text-emerald-200">
+          <span className="rounded-full border border-emerald-300/20 bg-emerald-300/[0.07] px-3 py-1.5 text-sm font-medium text-emerald-300">
             Registro abierto
           </span>
         </header>
