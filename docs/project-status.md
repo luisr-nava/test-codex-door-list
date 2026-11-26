@@ -19,10 +19,11 @@
 - API pública de registro con JSON en `camelCase`, errores `{ error }`, códigos HTTP de negocio y mensajes seguros en la interfaz.
 - Políticas RLS y funciones SQL para separar operaciones del organizador y del público.
 - Tipos, formatos de fecha y conversiones entre dominio y persistencia centralizados en `lib/`.
+- Pantalla `/scan` para lectura de QR o código manual, check-in atómico y estados de resultado; el detalle del organizador refleja el estado de ingreso.
 
 ## Estado actual
 
-La base funcional para crear eventos y registrar asistentes está implementada en el código inspeccionado. La migración pendiente `20261126000005_rename_ticket_tables.sql` alinea los nombres de tablas con el vocabulario del dominio y centraliza la vigencia del registro público; no está aplicada a la base de datos.
+La base funcional para crear eventos, registrar asistentes y hacer check-in está implementada. La migración `20261126000010_add_ticket_check_in.sql` se aplicó a la base enlazada de producción.
 
 ## Pendientes o no evidenciados
 

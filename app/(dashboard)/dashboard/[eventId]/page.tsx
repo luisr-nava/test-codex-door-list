@@ -109,6 +109,27 @@ export default function EventDashboardPage() {
     void loadDashboard();
   }, [eventId]);
 
+  useEffect(() => {
+    if (state !== "ready" || registrations.length === 0) return;
+    const supabase = createSupabaseClient();
+    const registrationIds = registrations.map((registration) => registration.id);
+    let active = true;
+    async function refreshCheckIns() {
+      if (document.visibilityState !== "visible") return;
+      const { data, error } = await supabase.from("tickets")
+        .select("registration_id, code, status, created_at")
+        .in("registration_id", registrationIds);
+      if (active && !error) setTickets((data ?? []).map(mapOrganizerTicket));
+    }
+    const timer = window.setInterval(() => { void refreshCheckIns(); }, 15000);
+    document.addEventListener("visibilitychange", refreshCheckIns);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshCheckIns);
+    };
+  }, [registrations, state]);
+
   const attendees = useMemo(
     () => createAttendeeExportRows(registrations, ticketTypes, tickets),
     [registrations, ticketTypes, tickets],
@@ -135,6 +156,7 @@ export default function EventDashboardPage() {
             <p className="text-sm font-semibold text-violet-300">PANEL DEL EVENTO</p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{event.title}</h1>
             <p className="mt-3 text-zinc-400">{formatEventDateTime(event.startsAt, "full")} · {event.venue}</p>
+            <Link href="/scan" className="primary-button mt-5 inline-block">Escanear entradas</Link>
           </header>
 
           <section className="mt-8">
@@ -156,12 +178,12 @@ export default function EventDashboardPage() {
           />
 
           <section className="mt-10">
-            <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-2xl font-bold">Asistentes registrados</h2>{hasAttendees && <AttendeesCsvButton attendees={attendees} eventTitle={event.title} />}</div>
+            <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-2xl font-bold">Asistentes registrados</h2><p className="mt-1 text-sm text-zinc-400">{attendees.filter((attendee) => attendee.ticketStatus === "used").length} ingresaron · Se actualiza automáticamente.</p></div>{hasAttendees && <AttendeesCsvButton attendees={attendees} eventTitle={event.title} />}</div>
             <div className="event-detail-card mt-4 overflow-x-auto p-0">
-              <table className="w-full min-w-[42rem] text-left text-sm">
-                <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-zinc-500"><tr><th className="px-5 py-4">Asistente</th><th className="px-5 py-4">Email</th><th className="px-5 py-4">Entrada</th><th className="px-5 py-4">Compra</th></tr></thead>
+              <table className="w-full min-w-[48rem] text-left text-sm">
+                <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-zinc-500"><tr><th className="px-5 py-4">Asistente</th><th className="px-5 py-4">Email</th><th className="px-5 py-4">Entrada</th><th className="px-5 py-4">Ingreso</th><th className="px-5 py-4">Compra</th></tr></thead>
                 <tbody>
-                  {hasAttendees ? attendees.map((attendee) => <tr key={attendee.ticketCode} className="border-b border-white/10 last:border-0"><td className="px-5 py-4 font-medium">{attendee.attendeeName}</td><td className="px-5 py-4 text-zinc-300">{attendee.email}</td><td className="px-5 py-4 text-zinc-300">{attendee.ticketTypeName}</td><td className="px-5 py-4 text-zinc-400">{formatEventDateTime(attendee.purchasedAt, "medium")}</td></tr>) : <tr><td className="px-5 py-8 text-center text-zinc-400" colSpan={4}>Los asistentes registrados aparecerán aquí.</td></tr>}
+                  {hasAttendees ? attendees.map((attendee) => <tr key={attendee.ticketCode} className="border-b border-white/10 last:border-0"><td className="px-5 py-4 font-medium">{attendee.attendeeName}</td><td className="px-5 py-4 text-zinc-300">{attendee.email}</td><td className="px-5 py-4 text-zinc-300">{attendee.ticketTypeName}</td><td className={`px-5 py-4 font-semibold ${attendee.ticketStatus === "used" ? "text-emerald-300" : "text-zinc-400"}`}>{attendee.ticketStatus === "used" ? "Ingresó" : "Pendiente"}</td><td className="px-5 py-4 text-zinc-400">{formatEventDateTime(attendee.purchasedAt, "medium")}</td></tr>) : <tr><td className="px-5 py-8 text-center text-zinc-400" colSpan={5}>Los asistentes registrados aparecerán aquí.</td></tr>}
                 </tbody>
               </table>
             </div>

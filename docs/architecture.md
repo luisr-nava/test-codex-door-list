@@ -64,29 +64,14 @@ disponibilidad y unicidad. Tras emitirla, el Route Handler obtiene la entrada
 por su código secreto y envía un email con QR inline mediante Resend. La entrada
 pública se consulta exclusivamente por su código secreto.
 
-## Decisión pendiente: generación y lectura de QR
+## Control de acceso por QR
 
-Cuando se implemente el control de acceso mediante cámara, se seguirá esta
-decisión técnica:
+`/scan` ofrece la cámara trasera mediante `qr-scanner` y un ingreso manual del
+código de respaldo. El navegador envía el código opaco a
+`POST /api/events/[eventId]/check-in` con la sesión del organizador. La RPC
+`check_in_ticket` comprueba propiedad del evento y bloquea la fila antes de
+marcar el ticket `used` con `checked_in_at`. El panel del evento consulta los
+estados de entradas periódicamente para reflejar los ingresos.
 
-- **Generación en servidor:** mantener `qrcode` `1.5.4`, que ya es una
-  dependencia del proyecto. Puede generar SVG con
-  `toString(..., { type: "svg" })` o PNG con `toBuffer()` sin delegar la
-  generación al navegador. Se descarta `next-qrcode` porque está orientada a
-  hooks y componentes React, no a la generación autoritativa del lado servidor.
-- **Lectura en navegador:** incorporar `html5-qrcode` y encapsular su API
-  `Html5Qrcode` en un Client Component específico del lector. Se limitará a
-  `QR_CODE`, se preferirá la cámara trasera con `facingMode: "environment"` y se
-  liberará el stream mediante `stop()` y `clear()` al desmontar. Se descarta el
-  wrapper `html5-qrcode-react`: añade una capa sobre la misma librería y su
-  ejemplo publicado se basa en React 17.
-- **Restricción de despliegue:** el lector requiere HTTPS en producción;
-  `localhost` es la excepción válida durante desarrollo.
-- **Seguridad:** el QR transportará solamente un token opaco, aleatorio y de un
-  solo uso. El resultado de la cámara no acredita el acceso por sí mismo: el
-  navegador lo enviará a un endpoint y el servidor validará de forma atómica el
-  ticket, su estado, vencimiento y que no haya sido usado previamente.
-
-La evaluación se realizó con la documentación actual consultada mediante
-Context7. La instalación de `html5-qrcode` queda pendiente de la aprobación
-requerida para añadir dependencias.
+La cámara requiere HTTPS en producción o `localhost` en desarrollo. La
+generación del QR de la entrada pública sigue utilizando `qrcode` en el servidor.

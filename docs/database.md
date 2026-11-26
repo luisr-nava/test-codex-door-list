@@ -46,3 +46,4 @@ RLS está habilitado en `events`, `ticket_types` y `registrations`.
 - `20261126000008_allow_owners_to_read_tickets.sql`: permite por RLS que cada organizador autenticado lea los tickets de sus propios eventos para exportar asistentes.
 - `20261126000006_fix_ticket_type_capacity_trigger.sql`: aplicada; actualiza la función del trigger de capacidad para consultar `ticket_types`.
 - `20261126000009_add_public_event_availability_summary.sql`: añade a la RPC pública de eventos el resumen de tipos de entrada disponibles y plazas restantes.
+- `20261126000010_add_ticket_check_in.sql`: aplicada; agrega `tickets.checked_in_at` y la RPC autenticada `check_in_ticket`, que comprueba la propiedad del evento y marca el uso de forma atómica.

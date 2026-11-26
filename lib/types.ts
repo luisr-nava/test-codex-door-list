@@ -89,6 +89,14 @@ export type RegistrationSuccessResponse = {
 
 export type ApiErrorResponse = { error: string };
 
+export type CheckInRequest = { ticketCode: string };
+
+export type CheckInResponse = {
+  status: "valid" | "used";
+  attendeeName: string;
+  ticketTypeName: string;
+};
+
 export type PublicTicket = {
   code: string;
   status: "valid" | "used" | "revoke";
