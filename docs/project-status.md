@@ -9,6 +9,8 @@
 - Enlace público de registro, apertura en nueva pestaña y copia al portapapeles.
 - Página pública con datos del evento, disponibilidad por entrada y estado de agotado.
 - Registro de asistentes con validación cliente/servidor, normalización de email, prevención de duplicados y control de concurrencia mediante bloqueo SQL.
+- Emisión atómica de una entrada por registro, con código secreto, estado y página pública con QR.
+- Email de confirmación mediante Resend, con los datos del evento y el QR embebido.
 - Políticas RLS y funciones SQL para separar operaciones del organizador y del público.
 
 ## Estado actual
@@ -19,7 +21,7 @@ La base funcional para crear eventos y registrar asistentes está implementada e
 
 - No existe en los archivos inspeccionados una lista formal de pendientes o roadmap.
 - No se observa una pantalla del organizador para consultar la tabla `registrations`.
-- No se observan emisión de tickets, emails de confirmación, cancelaciones, pagos ni reportes.
+- No se observan cancelaciones, pagos ni reportes.
 - `package.json` no declara scripts de pruebas o lint; no se ejecutaron verificaciones contra la base de datos.
 
 Las ausencias anteriores se documentan como funcionalidades no evidenciadas en esta inspección, no como requisitos confirmados.

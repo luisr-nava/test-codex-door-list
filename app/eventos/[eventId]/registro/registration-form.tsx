@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { registerForEvent } from "./actions";
 import type {
   PublicTicketType,
@@ -42,8 +43,18 @@ export function RegistrationForm({
         <h2 className="mt-3 text-2xl font-bold text-white">Tu lugar está reservado</h2>
         <p className="mt-3 leading-7 text-zinc-300">
           Registramos tus datos para <strong className="text-white">{eventTitle}</strong>.
-          Ya puedes cerrar esta página.
+          Conserva tu entrada para presentarla al ingresar.
         </p>
+        {state.message && (
+          <p className={`mt-4 rounded-xl border px-4 py-3 text-sm leading-6 ${
+            state.emailStatus === "failed"
+              ? "border-amber-300/20 bg-amber-300/[0.07] text-amber-200"
+              : "border-emerald-300/20 bg-emerald-300/[0.07] text-emerald-200"
+          }`}>
+            {state.message}
+          </p>
+        )}
+        {state.ticketCode && <Link href={`/entradas/${state.ticketCode}`} className="primary-button mt-6 inline-block">Ver mi entrada</Link>}
       </section>
     );
   }

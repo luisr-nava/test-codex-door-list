@@ -22,10 +22,30 @@ export type RegistrationResultCode =
   | "DUPLICATE_EMAIL"
   | "INVALID_INPUT";
 
+export type PublicTicket = {
+  code: string;
+  status: "valid" | "used" | "revoke";
+  createdAt: string;
+  attendee: {
+    name: string;
+    email: string;
+  };
+  event: {
+    title: string;
+    startsAt: string;
+    venue: string;
+  };
+  ticketType: {
+    name: string;
+  };
+};
+
 export type RegistrationFormState = {
   status: "idle" | "error" | "success";
   code?: RegistrationResultCode | "UNEXPECTED_ERROR";
   message?: string;
+  ticketCode?: string;
+  emailStatus?: "sent" | "failed";
   fieldErrors?: {
     name?: string;
     email?: string;

@@ -3,8 +3,10 @@
 import {
   createPublicRegistration,
   getPublicEventRegistration,
+  getPublicTicket,
 } from "@/lib/registrations/data";
 import type { RegistrationFormState } from "@/lib/registrations/types";
+import { sendTicketEmail } from "@/lib/tickets/email";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,11 +60,26 @@ export async function registerForEvent(
       email,
     });
 
-    if (result.ok) {
+    if (result.ok && result.ticketCode) {
+      let emailStatus: "sent" | "failed" = "sent";
+
+      try {
+        const ticket = await getPublicTicket(result.ticketCode);
+        if (!ticket) throw new Error("The issued ticket could not be retrieved.");
+        await sendTicketEmail(ticket);
+      } catch {
+        emailStatus = "failed";
+        console.error("Ticket confirmation email could not be sent.");
+      }
+
       return {
         status: "success",
         code: "SUCCESS",
-        message: "Tu lugar quedó confirmado.",
+        message: emailStatus === "sent"
+          ? "Tu lugar quedó confirmado. Te enviamos la entrada por email."
+          : "Tu lugar quedó confirmado, pero no pudimos enviarte el email.",
+        ticketCode: result.ticketCode,
+        emailStatus,
       };
     }
 

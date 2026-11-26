@@ -3,13 +3,34 @@ import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   PublicEventRegistration,
+  PublicTicket,
   RegistrationResultCode,
 } from "@/lib/registrations/types";
 
 type RegistrationRpcResult = {
   ok: boolean;
   code: RegistrationResultCode;
+  ticketCode?: string;
 };
+
+function isPublicTicket(value: unknown): value is PublicTicket {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<PublicTicket>;
+  return Boolean(
+    typeof candidate.code === "string"
+      && (candidate.status === "valid" || candidate.status === "used" || candidate.status === "revoke")
+      && typeof candidate.createdAt === "string"
+      && candidate.attendee
+      && typeof candidate.attendee.name === "string"
+      && typeof candidate.attendee.email === "string"
+      && candidate.event
+      && typeof candidate.event.title === "string"
+      && typeof candidate.event.startsAt === "string"
+      && typeof candidate.event.venue === "string"
+      && candidate.ticketType
+      && typeof candidate.ticketType.name === "string",
+  );
+}
 
 function isPublicEventRegistration(value: unknown): value is PublicEventRegistration {
   if (!value || typeof value !== "object") return false;
@@ -65,4 +86,19 @@ export async function createPublicRegistration(input: {
   }
 
   return data as RegistrationRpcResult;
+}
+
+export async function getPublicTicket(code: string) {
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("get_public_ticket", {
+    p_code: code,
+  });
+
+  if (error) throw error;
+  if (data === null) return null;
+  if (!isPublicTicket(data)) {
+    throw new Error("The public ticket response has an invalid shape.");
+  }
+
+  return data;
 }

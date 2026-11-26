@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseClient } from "@/lib/supabase/client";
 
@@ -33,28 +34,12 @@ const emptyEvent = {
 function toLocalDateTime(value: string) {
   return value ? new Date(value).toISOString().slice(0, 16) : "";
 }
-
 function formatEventDateTime(value: string) {
   return new Intl.DateTimeFormat("es-AR", {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "America/Argentina/Buenos_Aires",
   }).format(new Date(value));
-}
-
-function buenosAiresDateKey(value: Date | string) {
-  const parts = new Intl.DateTimeFormat("en", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    timeZone: "America/Argentina/Buenos_Aires",
-  }).formatToParts(new Date(value));
-  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value ?? "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
-}
-
-function isPublicRegistrationOpen(event: Event) {
-  return event.status === "published" && buenosAiresDateKey(event.starts_at) >= buenosAiresDateKey(new Date());
 }
 
 function readableError(error: { message: string } | null) {
@@ -73,7 +58,11 @@ export default function Home() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [eventForm, setEventForm] = useState(emptyEvent);
-  const [ticketForm, setTicketForm] = useState({ id: "", name: "", max_capacity: "" });
+  const [ticketForm, setTicketForm] = useState({
+    id: "",
+    name: "",
+    max_capacity: "",
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
@@ -82,22 +71,32 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const selectedEvent = events.find((event) => event.id === selectedEventId) ?? null;
-  const editingEvent = events.find((event) => event.id === editingEventId) ?? null;
+  const selectedEvent =
+    events.find((event) => event.id === selectedEventId) ?? null;
+  const editingEvent =
+    events.find((event) => event.id === editingEventId) ?? null;
   const selectedTickets = useMemo(
     () => tickets.filter((ticket) => ticket.event_id === selectedEventId),
     [tickets, selectedEventId],
   );
-  const assignedCapacity = selectedTickets.reduce((sum, ticket) => sum + ticket.max_capacity, 0);
+  const assignedCapacity = selectedTickets.reduce(
+    (sum, ticket) => sum + ticket.max_capacity,
+    0,
+  );
   const assignedCapacityByEvent = useMemo(() => {
     return tickets.reduce((capacities, ticket) => {
-      capacities.set(ticket.event_id, (capacities.get(ticket.event_id) ?? 0) + ticket.max_capacity);
+      capacities.set(
+        ticket.event_id,
+        (capacities.get(ticket.event_id) ?? 0) + ticket.max_capacity,
+      );
       return capacities;
     }, new Map<string, number>());
   }, [tickets]);
 
   async function loadOrganizerData() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
     const { data: eventsData, error: eventsError } = await supabase
       .from("events")
@@ -111,7 +110,11 @@ export default function Home() {
     }
     const eventIds = (eventsData ?? []).map((event) => event.id);
     const { data: ticketsData, error: ticketsError } = eventIds.length
-      ? await supabase.from("tickets_types").select("id, event_id, name, max_capacity").in("event_id", eventIds).order("created_at")
+      ? await supabase
+          .from("tickets_types")
+          .select("id, event_id, name, max_capacity")
+          .in("event_id", eventIds)
+          .order("created_at")
       : { data: [], error: null };
 
     if (ticketsError) {
@@ -130,16 +133,18 @@ export default function Home() {
       setLoading(false);
     }
     void initialize();
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-      if (nextSession) void loadOrganizerData();
-      else {
-        setEvents([]);
-        setTickets([]);
-        setSelectedEventId(null);
-        setEditingEventId(null);
-      }
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, nextSession) => {
+        setSession(nextSession);
+        if (nextSession) void loadOrganizerData();
+        else {
+          setEvents([]);
+          setTickets([]);
+          setSelectedEventId(null);
+          setEditingEventId(null);
+        }
+      },
+    );
     return () => listener.subscription.unsubscribe();
   }, [supabase]);
 
@@ -169,7 +174,10 @@ export default function Home() {
   }
 
   async function copyRegistrationLink(eventId: string) {
-    const url = new URL(`/eventos/${eventId}/registro`, window.location.origin).toString();
+    const url = new URL(
+      `/eventos/${eventId}/registro`,
+      window.location.origin,
+    ).toString();
     try {
       await navigator.clipboard.writeText(url);
       setMessage("Enlace de registro copiado.");
@@ -182,13 +190,16 @@ export default function Home() {
     event.preventDefault();
     setSaving(true);
     setMessage("");
-    const result = authMode === "signin"
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password });
+    const result =
+      authMode === "signin"
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password });
     setSaving(false);
     if (result.error) setMessage(readableError(result.error));
     else if (authMode === "signup" && !result.data.session) {
-      setMessage("Revisa tu correo para confirmar la cuenta y luego inicia sesión.");
+      setMessage(
+        "Revisa tu correo para confirmar la cuenta y luego inicia sesión.",
+      );
     }
   }
 
@@ -206,7 +217,9 @@ export default function Home() {
     };
     const result = editingEvent
       ? await supabase.from("events").update(payload).eq("id", editingEvent.id)
-      : await supabase.from("events").insert({ ...payload, owner_id: session?.user.id });
+      : await supabase
+          .from("events")
+          .insert({ ...payload, owner_id: session?.user.id });
     setSaving(false);
     if (result.error) {
       setMessage(readableError(result.error));
@@ -219,7 +232,11 @@ export default function Home() {
   }
 
   async function removeEvent(eventId = editingEvent?.id) {
-    if (!eventId || !window.confirm("¿Eliminar este evento y sus tipos de entrada?")) return;
+    if (
+      !eventId ||
+      !window.confirm("¿Eliminar este evento y sus tipos de entrada?")
+    )
+      return;
     setSaving(true);
     const { error } = await supabase.from("events").delete().eq("id", eventId);
     setSaving(false);
@@ -237,14 +254,27 @@ export default function Home() {
     if (!selectedEvent) return;
     setTicketMessage("");
     const requestedCapacity = Number(ticketForm.max_capacity);
-    const previousCapacity = selectedTickets.find((ticket) => ticket.id === ticketForm.id)?.max_capacity ?? 0;
-    if (assignedCapacity - previousCapacity + requestedCapacity > selectedEvent.max_capacity) {
-      setTicketMessage("El aforo total de los tipos de entrada no puede superar el límite del evento.");
+    const previousCapacity =
+      selectedTickets.find((ticket) => ticket.id === ticketForm.id)
+        ?.max_capacity ?? 0;
+    if (
+      assignedCapacity - previousCapacity + requestedCapacity >
+      selectedEvent.max_capacity
+    ) {
+      setTicketMessage(
+        "El aforo total de los tipos de entrada no puede superar el límite del evento.",
+      );
       return;
     }
     setSaving(true);
     const { error } = ticketForm.id
-      ? await supabase.from("tickets_types").update({ name: ticketForm.name.trim(), max_capacity: requestedCapacity }).eq("id", ticketForm.id)
+      ? await supabase
+          .from("tickets_types")
+          .update({
+            name: ticketForm.name.trim(),
+            max_capacity: requestedCapacity,
+          })
+          .eq("id", ticketForm.id)
       : await supabase.from("tickets_types").insert({
           event_id: selectedEvent.id,
           name: ticketForm.name.trim(),
@@ -260,27 +290,78 @@ export default function Home() {
 
   async function removeTicket(ticketId: string) {
     setSaving(true);
-    const { error } = await supabase.from("tickets_types").delete().eq("id", ticketId);
+    const { error } = await supabase
+      .from("tickets_types")
+      .delete()
+      .eq("id", ticketId);
     setSaving(false);
     if (error) setMessage(readableError(error));
     else await loadOrganizerData();
   }
 
-  if (loading) return <main className="grid min-h-screen place-items-center text-zinc-300">Cargando…</main>;
+  if (loading)
+    return (
+      <main className="grid min-h-screen place-items-center text-zinc-300">
+        Cargando…
+      </main>
+    );
 
   if (!session) {
     return (
       <main className="grid min-h-screen place-items-center px-6 py-12">
-        <form onSubmit={submitAuth} className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-300">Door List</p>
+        <form
+          onSubmit={submitAuth}
+          className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-300">
+            Door List
+          </p>
           <h1 className="mt-3 text-3xl font-bold">Panel del organizador</h1>
-          <p className="mt-2 text-zinc-400">Gestiona tus eventos y sus entradas con tu cuenta de Supabase.</p>
-          <label className="mt-7 block text-sm">Correo<input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field" /></label>
-          <label className="mt-4 block text-sm">Contraseña<input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="field" /></label>
-          {message && <p aria-live="polite" className="mt-4 text-sm text-amber-300">{message}</p>}
-          <button disabled={saving} className="primary-button mt-7 w-full">{saving ? "Procesando…" : authMode === "signin" ? "Ingresar" : "Crear cuenta"}</button>
-          <button type="button" onClick={() => { setAuthMode(authMode === "signin" ? "signup" : "signin"); setMessage(""); }} className="mt-4 w-full text-sm text-violet-300 hover:text-violet-200">
-            {authMode === "signin" ? "¿No tienes cuenta? Regístrate" : "Ya tengo cuenta"}
+          <p className="mt-2 text-zinc-400">
+            Gestiona tus eventos y sus entradas con tu cuenta de Supabase.
+          </p>
+          <label className="mt-7 block text-sm">
+            Correo
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="field"
+            />
+          </label>
+          <label className="mt-4 block text-sm">
+            Contraseña
+            <input
+              required
+              minLength={6}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="field"
+            />
+          </label>
+          {message && (
+            <p aria-live="polite" className="mt-4 text-sm text-amber-300">
+              {message}
+            </p>
+          )}
+          <button disabled={saving} className="primary-button mt-7 w-full">
+            {saving
+              ? "Procesando…"
+              : authMode === "signin"
+                ? "Ingresar"
+                : "Crear cuenta"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode(authMode === "signin" ? "signup" : "signin");
+              setMessage("");
+            }}
+            className="mt-4 w-full text-sm text-violet-300 hover:text-violet-200">
+            {authMode === "signin"
+              ? "¿No tienes cuenta? Regístrate"
+              : "Ya tengo cuenta"}
           </button>
         </form>
       </main>
@@ -290,39 +371,368 @@ export default function Home() {
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-5 py-8 sm:px-8">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div><p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-300">Door List</p><h1 className="mt-1 text-3xl font-bold">Eventos</h1></div>
-        <div className="flex gap-3"><button type="button" onClick={startNewEvent} className="primary-button">Nuevo evento</button><button type="button" onClick={() => void supabase.auth.signOut()} className="secondary-button">Cerrar sesión</button></div>
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-300">
+            Door List
+          </p>
+          <h1 className="mt-1 text-3xl font-bold">Eventos</h1>
+        </div>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={startNewEvent}
+            className="primary-button">
+            Nuevo evento
+          </button>
+          <button
+            type="button"
+            onClick={() => void supabase.auth.signOut()}
+            className="secondary-button">
+            Cerrar sesión
+          </button>
+        </div>
       </header>
-      {message && <p aria-live="polite" className="mb-5 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-200">{message}</p>}
+      {message && (
+        <p
+          aria-live="polite"
+          className="mb-5 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-200">
+          {message}
+        </p>
+      )}
       <div className="space-y-6">
         <section className="grid gap-6 xl:grid-cols-2">
-          <form onSubmit={saveEvent} className="rounded-2xl border border-white/10 bg-white/5 p-6">
-            <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-bold">{editingEvent ? "Editar evento" : "Nuevo evento"}</h2>{editingEvent && <span className="rounded-full bg-white/10 px-3 py-1 text-xs">{editingEvent.status === "published" ? "Publicado" : "Borrador"}</span>}</div>
-            <label className="mt-5 block text-sm">Título<input required value={eventForm.title} onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })} className="field" /></label>
-            <label className="mt-4 block text-sm">Descripción<textarea required value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} className="field min-h-24 resize-y" /></label>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="text-sm">Fecha y hora<input required type="datetime-local" value={eventForm.starts_at} onChange={(e) => setEventForm({ ...eventForm, starts_at: e.target.value })} className="field" /></label><label className="text-sm">Lugar<input required value={eventForm.venue} onChange={(e) => setEventForm({ ...eventForm, venue: e.target.value })} className="field" /></label></div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="text-sm">Aforo máximo del evento<input required min="1" type="number" value={eventForm.max_capacity} onChange={(e) => setEventForm({ ...eventForm, max_capacity: e.target.value })} className="field" /></label><label className="text-sm">Estado<select value={eventForm.status} onChange={(e) => setEventForm({ ...eventForm, status: e.target.value as Event["status"] })} className="field"><option value="draft">Borrador</option><option value="published">Publicado</option></select></label></div>
-            <div className="mt-6 flex flex-wrap gap-3"><button disabled={saving} className="primary-button">{saving ? "Guardando…" : "Guardar evento"}</button>{editingEvent && <button type="button" disabled={saving} onClick={() => removeEvent()} className="text-sm text-red-300 hover:text-red-200">Eliminar</button>}</div>
+          <form
+            onSubmit={saveEvent}
+            className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold">
+                {editingEvent ? "Editar evento" : "Nuevo evento"}
+              </h2>
+              {editingEvent && (
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs">
+                  {editingEvent.status === "published"
+                    ? "Publicado"
+                    : "Borrador"}
+                </span>
+              )}
+            </div>
+            <label className="mt-5 block text-sm">
+              Título
+              <input
+                required
+                value={eventForm.title}
+                onChange={(e) =>
+                  setEventForm({ ...eventForm, title: e.target.value })
+                }
+                className="field"
+              />
+            </label>
+            <label className="mt-4 block text-sm">
+              Descripción
+              <textarea
+                required
+                value={eventForm.description}
+                onChange={(e) =>
+                  setEventForm({ ...eventForm, description: e.target.value })
+                }
+                className="field min-h-24 resize-y"
+              />
+            </label>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm">
+                Fecha y hora
+                <input
+                  required
+                  type="datetime-local"
+                  value={eventForm.starts_at}
+                  onChange={(e) =>
+                    setEventForm({ ...eventForm, starts_at: e.target.value })
+                  }
+                  className="field"
+                />
+              </label>
+              <label className="text-sm">
+                Lugar
+                <input
+                  required
+                  value={eventForm.venue}
+                  onChange={(e) =>
+                    setEventForm({ ...eventForm, venue: e.target.value })
+                  }
+                  className="field"
+                />
+              </label>
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm">
+                Aforo máximo del evento
+                <input
+                  required
+                  min="1"
+                  type="number"
+                  value={eventForm.max_capacity}
+                  onChange={(e) =>
+                    setEventForm({ ...eventForm, max_capacity: e.target.value })
+                  }
+                  className="field"
+                />
+              </label>
+              <label className="text-sm">
+                Estado
+                <select
+                  value={eventForm.status}
+                  onChange={(e) =>
+                    setEventForm({
+                      ...eventForm,
+                      status: e.target.value as Event["status"],
+                    })
+                  }
+                  className="field">
+                  <option value="draft">Borrador</option>
+                  <option value="published">Publicado</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button disabled={saving} className="primary-button">
+                {saving ? "Guardando…" : "Guardar evento"}
+              </button>
+              {editingEvent && (
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => removeEvent()}
+                  className="text-sm text-red-300 hover:text-red-200">
+                  Eliminar
+                </button>
+              )}
+            </div>
           </form>
           <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-bold">Nuevos tipos de entrada</h2>
-            {!selectedEvent ? <p className="mt-4 text-zinc-400">Selecciona un evento en “Mis eventos” para agregar una nueva entrada.</p> : <>
-              <div className="mt-3 rounded-xl bg-violet-500/10 px-4 py-3 text-sm text-violet-100"><span className="font-semibold">{assignedCapacity} / {selectedEvent.max_capacity}</span> plazas asignadas · {selectedEvent.max_capacity - assignedCapacity} disponibles</div>
-              <form onSubmit={saveTicket} className="mt-5 grid gap-3 sm:grid-cols-[1fr_9rem_auto]">
-                <label className="text-sm">Nueva entrada<input required placeholder="Generar VIP" value={ticketForm.name} onChange={(e) => setTicketForm({ ...ticketForm, name: e.target.value })} className="field" /></label>
-                <label className="text-sm">Capacidad<input required min="1" type="number" placeholder="0" value={ticketForm.max_capacity} onChange={(e) => setTicketForm({ ...ticketForm, max_capacity: e.target.value })} className="field" /></label>
-                <div className="flex items-end gap-2"><button disabled={saving} className="primary-button whitespace-nowrap">{ticketForm.id ? "Guardar" : "Agregar entrada"}</button>{ticketForm.id && <button type="button" onClick={() => setTicketForm({ id: "", name: "", max_capacity: "" })} className="secondary-button">Cancelar</button>}</div>
-              </form>
-              {ticketMessage && <p aria-live="polite" className="mt-3 rounded-lg border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-sm text-amber-200">{ticketMessage}</p>}
-              <div className="mt-5 divide-y divide-white/10">{selectedTickets.map((ticket) => <div key={ticket.id} className="flex items-center justify-between gap-4 py-3"><div><p className="font-medium">{ticket.name}</p><p className="text-sm text-zinc-400">{ticket.max_capacity} plazas</p></div><div className="flex gap-3"><button type="button" disabled={saving} onClick={() => setTicketForm({ id: ticket.id, name: ticket.name, max_capacity: String(ticket.max_capacity) })} className="text-sm text-violet-300 hover:text-violet-200">Editar</button><button type="button" disabled={saving} onClick={() => removeTicket(ticket.id)} className="text-sm text-red-300 hover:text-red-200">Eliminar</button></div></div>)}{!selectedTickets.length && <p className="py-5 text-sm text-zinc-500">Todavía no hay tipos de entrada.</p>}</div>
-            </>}
+            {!selectedEvent ? (
+              <p className="mt-4 text-zinc-400">
+                Selecciona un evento en “Mis eventos” para agregar una nueva
+                entrada.
+              </p>
+            ) : (
+              <>
+                <div className="mt-3 rounded-xl bg-violet-500/10 px-4 py-3 text-sm text-violet-100">
+                  <span className="font-semibold">
+                    {assignedCapacity} / {selectedEvent.max_capacity}
+                  </span>{" "}
+                  plazas asignadas ·{" "}
+                  {selectedEvent.max_capacity - assignedCapacity} disponibles
+                </div>
+                <form
+                  onSubmit={saveTicket}
+                  className="mt-5 grid gap-3 sm:grid-cols-[1fr_9rem_auto]">
+                  <label className="text-sm">
+                    Nueva entrada
+                    <input
+                      required
+                      placeholder="Generar VIP"
+                      value={ticketForm.name}
+                      onChange={(e) =>
+                        setTicketForm({ ...ticketForm, name: e.target.value })
+                      }
+                      className="field"
+                    />
+                  </label>
+                  <label className="text-sm">
+                    Capacidad
+                    <input
+                      required
+                      min="1"
+                      type="number"
+                      placeholder="0"
+                      value={ticketForm.max_capacity}
+                      onChange={(e) =>
+                        setTicketForm({
+                          ...ticketForm,
+                          max_capacity: e.target.value,
+                        })
+                      }
+                      className="field"
+                    />
+                  </label>
+                  <div className="flex items-end gap-2">
+                    <button
+                      disabled={saving}
+                      className="primary-button whitespace-nowrap">
+                      {ticketForm.id ? "Guardar" : "Agregar entrada"}
+                    </button>
+                    {ticketForm.id && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTicketForm({ id: "", name: "", max_capacity: "" })
+                        }
+                        className="secondary-button">
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
+                </form>
+                {ticketMessage && (
+                  <p
+                    aria-live="polite"
+                    className="mt-3 rounded-lg border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-sm text-amber-200">
+                    {ticketMessage}
+                  </p>
+                )}
+                <div className="mt-5 divide-y divide-white/10">
+                  {selectedTickets.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className="flex items-center justify-between gap-4 py-3">
+                      <div>
+                        <p className="font-medium">{ticket.name}</p>
+                        <p className="text-sm text-zinc-400">
+                          {ticket.max_capacity} plazas
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() =>
+                            setTicketForm({
+                              id: ticket.id,
+                              name: ticket.name,
+                              max_capacity: String(ticket.max_capacity),
+                            })
+                          }
+                          className="text-sm text-violet-300 hover:text-violet-200">
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() => removeTicket(ticket.id)}
+                          className="text-sm text-red-300 hover:text-red-200">
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {!selectedTickets.length && (
+                    <p className="py-5 text-sm text-zinc-500">
+                      Todavía no hay tipos de entrada.
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </section>
         </section>
         <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Mis eventos</h2><p className="mt-1 text-sm text-zinc-400">Selecciona un evento para editarlo o administrar sus entradas.</p></div><span className="rounded-full bg-white/10 px-3 py-1 text-sm text-zinc-300">{events.length}</span></div>
-          {events.length ? <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{events.map((event) => <article key={event.id} onClick={() => selectEventForTickets(event)} className={`cursor-pointer rounded-xl border p-4 transition ${selectedEventId === event.id ? "border-violet-400 bg-violet-500/10" : "border-white/10 bg-white/[0.03]"}`}><div className="flex items-start justify-between gap-3"><h3 className="font-semibold text-white">{event.title}</h3><span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-zinc-300">{event.status === "published" ? "Publicado" : "Borrador"}</span></div><p className="mt-3 text-sm leading-6 text-zinc-300">{event.description}</p><dl className="mt-4 grid gap-3 rounded-lg bg-black/20 p-3 text-sm"><div><dt className="text-xs text-zinc-500">Fecha y hora</dt><dd className="mt-1 font-medium text-zinc-200">{formatEventDateTime(event.starts_at)}</dd></div><div><dt className="text-xs text-zinc-500">Ubicación / lugar</dt><dd className="mt-1 font-medium text-zinc-200">{event.venue}</dd></div><div className="grid grid-cols-2 gap-2"><div><dt className="text-xs text-zinc-500">Aforo máximo</dt><dd className="mt-1 font-medium text-zinc-200">{event.max_capacity}</dd></div><div><dt className="text-xs text-zinc-500">Aforo asignado</dt><dd className="mt-1 font-medium text-zinc-200">{assignedCapacityByEvent.get(event.id) ?? 0}</dd></div></div></dl><div className="mt-4 flex flex-wrap gap-3"><button type="button" onClick={(clickEvent) => { clickEvent.stopPropagation(); editEvent(event); }} className="text-sm font-semibold text-violet-300 hover:text-violet-200">Editar</button><button type="button" disabled={saving} onClick={(clickEvent) => { clickEvent.stopPropagation(); void removeEvent(event.id); }} className="text-sm font-semibold text-red-300 hover:text-red-200">Eliminar</button>{isPublicRegistrationOpen(event) ? <><a href={`/eventos/${event.id}/registro`} target="_blank" rel="noreferrer" onClick={(clickEvent) => clickEvent.stopPropagation()} className="text-sm font-semibold text-emerald-300 hover:text-emerald-200">Abrir registro</a><button type="button" onClick={(clickEvent) => { clickEvent.stopPropagation(); void copyRegistrationLink(event.id); }} className="text-sm font-semibold text-zinc-300 hover:text-white">Copiar enlace</button></> : event.status === "published" ? <span className="text-sm text-zinc-500">Registro cerrado</span> : null}</div></article>)}</div> : <p className="mt-5 rounded-xl border border-dashed border-white/15 px-4 py-8 text-center text-sm text-zinc-400">No hay eventos todavía disponibles.</p>}
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-bold">Mis eventos</h2>
+              <p className="mt-1 text-sm text-zinc-400">
+                Selecciona un evento para editarlo o administrar sus entradas.
+              </p>
+            </div>
+            <span className="rounded-full bg-white/10 px-3 py-1 text-sm text-zinc-300">
+              {events.length}
+            </span>
+          </div>
+          {events.length ? (
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {events.map((event) => (
+                <article
+                  key={event.id}
+                  onClick={() => selectEventForTickets(event)}
+                  className={`cursor-pointer rounded-xl border p-4 transition ${selectedEventId === event.id ? "border-violet-400 bg-violet-500/10" : "border-white/10 bg-white/[0.03]"}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-semibold text-white">{event.title}</h3>
+                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-zinc-300">
+                      {event.status === "published" ? "Publicado" : "Borrador"}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-zinc-300">
+                    {event.description}
+                  </p>
+                  <dl className="mt-4 grid gap-3 rounded-lg bg-black/20 p-3 text-sm">
+                    <div>
+                      <dt className="text-xs text-zinc-500">Fecha y hora</dt>
+                      <dd className="mt-1 font-medium text-zinc-200">
+                        {formatEventDateTime(event.starts_at)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-zinc-500">
+                        Ubicación / lugar
+                      </dt>
+                      <dd className="mt-1 font-medium text-zinc-200">
+                        {event.venue}
+                      </dd>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <dt className="text-xs text-zinc-500">Aforo máximo</dt>
+                        <dd className="mt-1 font-medium text-zinc-200">
+                          {event.max_capacity}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-zinc-500">
+                          Aforo asignado
+                        </dt>
+                        <dd className="mt-1 font-medium text-zinc-200">
+                          {assignedCapacityByEvent.get(event.id) ?? 0}
+                        </dd>
+                      </div>
+                    </div>
+                  </dl>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={(clickEvent) => {
+                        clickEvent.stopPropagation();
+                        editEvent(event);
+                      }}
+                      className="text-sm font-semibold text-violet-300 hover:text-violet-200">
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={(clickEvent) => {
+                        clickEvent.stopPropagation();
+                        void removeEvent(event.id);
+                      }}
+                      className="text-sm font-semibold text-red-300 hover:text-red-200">
+                      Eliminar
+                    </button>
+                    <Link
+                      href={`/eventos/${event.id}/registro`}
+                      onClick={(clickEvent) => clickEvent.stopPropagation()}
+                      className="text-sm font-semibold text-emerald-300 hover:text-emerald-200">
+                      Abrir registro
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={(clickEvent) => {
+                        clickEvent.stopPropagation();
+                        void copyRegistrationLink(event.id);
+                      }}
+                      className="text-sm font-semibold text-zinc-300 hover:text-white">
+                      Copiar enlace
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-5 rounded-xl border border-dashed border-white/15 px-4 py-8 text-center text-sm text-zinc-400">
+              No hay eventos todavía disponibles.
+            </p>
+          )}
         </section>
       </div>
     </main>
   );
 }
+
