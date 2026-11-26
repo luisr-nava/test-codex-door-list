@@ -14,7 +14,7 @@
 - `app/layout.tsx`: layout raíz, idioma `es` y metadatos.
 - `app/page.tsx`: landing pública; lista eventos mediante la RPC pública que centraliza la regla de registro abierto.
 - `app/organizador/page.tsx`: cliente principal del panel del organizador. Gestiona sesión, CRUD de eventos y tipos de entrada, cálculo de aforo y enlaces públicos.
-- `app/dashboard/page.tsx` y `app/dashboard/[eventId]/page.tsx`: panel privado de consulta de eventos, aforo por tipo de entrada, evolución diaria de registros y asistentes registrados.
+- `app/dashboard/page.tsx` y `app/(dashboard)/dashboard/[eventId]/page.tsx`: panel privado de consulta de eventos, aforo por tipo de entrada, evolución diaria, asistentes y exportación CSV.
 - `app/api/events/[eventId]/daily-registrations/route.ts`: endpoint autenticado para la serie diaria de registros del organizador.
 - `app/eventos/[eventId]/registro/page.tsx`: página pública de registro; valida el UUID, carga los datos mediante servidor y muestra el evento.
 - `app/eventos/[eventId]/registro/registration-form.tsx`: formulario cliente; selecciona entrada, muestra disponibilidad y procesa estados de éxito/error.
@@ -25,6 +25,7 @@
 - `lib/supabase/server.ts`: cliente Supabase sin persistencia de sesión para código servidor.
 - `lib/types.ts`: tipos de dominio y contratos compartidos entre UI, API y correo.
 - `lib/date-time.ts`: formateo compartido de fechas de eventos en Buenos Aires.
+- `lib/export/attendees-csv.ts`: filtra tickets vendibles y genera el CSV de asistentes con BOM UTF-8 y escape compatible con Excel.
 - `lib/supabase/mappers.ts`: traducción entre modelos de dominio en `camelCase` y filas o payloads de persistencia en `snake_case`.
 - `lib/registrations/data.ts`: acceso servidor a las RPC públicas y validación básica de la respuesta.
 - `lib/tickets/email.ts`: genera el QR PNG e invoca la API de Resend para enviar la entrada por correo con la imagen embebida.

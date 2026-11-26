@@ -7,6 +7,7 @@
 - Un evento tiene título, descripción, fecha/hora, lugar, aforo máximo y estado `draft` o `published`.
 - El organizador puede editar o eliminar eventos y administrar sus tipos de entrada.
 - El organizador puede consultar en `/dashboard` sus eventos y, para cada uno, los registros confirmados por tipo de entrada y la lista de asistentes. Solo el propietario puede acceder a esos datos.
+- El organizador puede descargar los asistentes con tickets `valid` o `used`; los tickets `revoke` no se exportan ni cuentan como vendidos.
 - Cada tipo de entrada tiene nombre y capacidad positiva; el nombre es único dentro del evento.
 - La suma de capacidades de los tipos de entrada no puede superar el aforo del evento.
 - Un tipo de entrada no puede trasladarse a otro evento y el propietario de un evento no puede cambiarse.

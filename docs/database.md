@@ -6,7 +6,7 @@
 - `public.ticket_types`: tipos de entrada pertenecientes a `events` mediante `event_id` con borrado en cascada; nombre único por evento, capacidad positiva y timestamps.
 - `public.registrations`: registro de asistente perteneciente a `events` y a `ticket_types`. La FK compuesta `(ticket_type_id, event_id)` garantiza que la entrada corresponda al evento; al borrar el evento, sus registros se eliminan en cascada.
 - `public.events.published_at`: fecha de la última publicación del evento, utilizada como inicio de la serie diaria del panel.
-- `public.tickets`: entradas emitidas para un único registro mediante `registration_id` único. Contiene un código único de 64 caracteres hexadecimales, estado `valid`, `used` o `revoke` y timestamp de emisión.
+- `public.tickets`: entradas emitidas para un único registro mediante `registration_id` único. Contiene un código único de 64 caracteres hexadecimales, estado `valid`, `used` o `revoke` y timestamp de emisión; solo el propietario del evento asociado puede leerlas.
 
 El enum `public.event_status` contiene `draft` y `published`. Hay índices para propietarios de eventos, eventos publicados por fecha, tipos por evento, registros por evento y registros por tipo.
 
@@ -31,7 +31,7 @@ RLS está habilitado en `events`, `ticket_types` y `registrations`.
 - `events`: lectura pública de publicados y lectura del propietario; inserción, actualización y borrado solo para usuarios autenticados propietarios. La migración final permite crear eventos propios en cualquiera de los dos estados.
 - `ticket_types`: lectura pública si el evento está publicado o pertenece al usuario; escritura solo para el propietario del evento.
 - `registrations`: sin privilegios directos para `anon`; usuarios autenticados pueden leer únicamente registros de sus eventos. La creación pública ocurre exclusivamente mediante la RPC con `security definer`.
-- `ticket`: sin privilegios directos para `anon` ni `authenticated`; la lectura pública ocurre exclusivamente mediante `get_public_ticket(text)`.
+- `tickets`: sin privilegios directos para `anon`; los usuarios autenticados solo pueden leer tickets de eventos propios mediante RLS. La lectura pública por código ocurre exclusivamente mediante `get_public_ticket(text)`.
 - Las RPC públicas tienen ejecución concedida a `anon` y `authenticated`, mientras que sus privilegios directos sobre `registrations` permanecen revocados.
 
 ## Migraciones existentes
@@ -43,4 +43,5 @@ RLS está habilitado en `events`, `ticket_types` y `registrations`.
 - `20261126000004_create_tickets.sql`: crea las entradas emitidas, sus estados, la emisión atómica durante el registro y su consulta pública mediante código secreto.
 - `20261126000005_rename_ticket_tables.sql`: aplicada; renombra `tickets_types` a `ticket_types` y `ticket` a `tickets`, y centraliza la regla de registro abierto.
 - `20261126000007_add_event_published_at.sql`: añade la fecha de publicación y la conserva al publicar un evento.
+- `20261126000008_allow_owners_to_read_tickets.sql`: permite por RLS que cada organizador autenticado lea los tickets de sus propios eventos para exportar asistentes.
 - `20261126000006_fix_ticket_type_capacity_trigger.sql`: aplicada; actualiza la función del trigger de capacidad para consultar `ticket_types`.

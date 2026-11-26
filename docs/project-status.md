@@ -8,6 +8,7 @@
 - CRUD de tipos de entrada por evento.
 - Panel privado `/dashboard` para consultar eventos propios, ocupación por tipo de entrada y asistentes registrados.
 - Gráfica diaria de registros desde la publicación en el detalle privado de cada evento.
+- Exportación CSV de asistentes con tickets vendidos y ocupación por tipo de entrada en el detalle privado.
 - Visualización de aforo asignado y validación de capacidad en UI y base de datos.
 - Enlace público de registro, apertura en nueva pestaña y copia al portapapeles.
 - Página pública con datos del evento, disponibilidad por entrada y estado de agotado.

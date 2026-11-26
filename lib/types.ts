@@ -26,6 +26,15 @@ export type OrganizerRegistration = {
   createdAt: string;
 };
 
+export type TicketStatus = "valid" | "used" | "revoke";
+
+export type OrganizerTicket = {
+  registrationId: string;
+  code: string;
+  status: TicketStatus;
+  createdAt: string;
+};
+
 export type DailyRegistrationCount = {
   date: string;
   registrations: number;
