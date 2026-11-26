@@ -3,6 +3,7 @@
 ## Implementado
 
 - Panel de organizador con registro e inicio de sesión mediante Supabase Auth.
+- Landing pública de eventos en `/` y panel del organizador separado en `/organizador`.
 - CRUD de eventos propios con estados borrador/publicado.
 - CRUD de tipos de entrada por evento.
 - Visualización de aforo asignado y validación de capacidad en UI y base de datos.
