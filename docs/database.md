@@ -40,4 +40,5 @@ RLS está habilitado en `events`, `ticket_types` y `registrations`.
 - `20261125000002_allow_selected_event_status.sql`: elimina la obligación de que un evento publicado tenga previamente un tipo de entrada y permite crear eventos propios con el estado elegido.
 - `20261125000003_create_public_registrations.sql`: crea registros, unicidad por email/evento, FK compuesta, protección de capacidad, RLS y las RPC públicas de lectura y alta.
 - `20261126000004_create_tickets.sql`: crea las entradas emitidas, sus estados, la emisión atómica durante el registro y su consulta pública mediante código secreto.
-- `20261126000005_rename_ticket_tables.sql`: pendiente de aplicación; renombra `tickets_types` a `ticket_types` y `ticket` a `tickets`, y centraliza la regla de registro abierto.
+- `20261126000005_rename_ticket_tables.sql`: aplicada; renombra `tickets_types` a `ticket_types` y `ticket` a `tickets`, y centraliza la regla de registro abierto.
+- `20261126000006_fix_ticket_type_capacity_trigger.sql`: aplicada; actualiza la función del trigger de capacidad para consultar `ticket_types`.

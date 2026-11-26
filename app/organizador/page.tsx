@@ -521,13 +521,37 @@ export default function OrganizerPage() {
           </form>
           <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-xl font-bold">Nuevos tipos de entrada</h2>
-            {!selectedEvent ? (
+            {!events.length ? (
               <p className="mt-4 text-zinc-400">
-                Selecciona un evento en “Mis eventos” para agregar una nueva
-                entrada.
+                Crea un evento antes de configurar sus entradas.
               </p>
             ) : (
               <>
+                <label className="mt-4 block text-sm">
+                  Evento
+                  <select
+                    value={selectedEventId ?? ""}
+                    onChange={(event) => {
+                      const selected = events.find(
+                        (item) => item.id === event.target.value,
+                      );
+                      if (selected) selectEventForTickets(selected);
+                    }}
+                    className="field">
+                    <option value="">Selecciona un evento</option>
+                    {events.map((event) => (
+                      <option key={event.id} value={event.id}>
+                        {event.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {!selectedEvent ? (
+                  <p className="mt-4 text-zinc-400">
+                    Elige un evento para configurar sus entradas.
+                  </p>
+                ) : (
+                  <>
                 <div className="mt-3 rounded-xl bg-violet-500/10 px-4 py-3 text-sm text-violet-100">
                   <span className="font-semibold">
                     {assignedCapacity} / {selectedEvent.maxCapacity}
@@ -633,6 +657,8 @@ export default function OrganizerPage() {
                     </p>
                   )}
                 </div>
+                  </>
+                )}
               </>
             )}
           </section>
