@@ -50,7 +50,7 @@ function readableError(error: { message: string } | null) {
   return error.message;
 }
 
-export default function Home() {
+export default function OrganizerPage() {
   const [supabase] = useState(() => createSupabaseClient());
   const [session, setSession] = useState<Session | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
@@ -111,7 +111,7 @@ export default function Home() {
     const eventIds = (eventsData ?? []).map((event) => event.id);
     const { data: ticketsData, error: ticketsError } = eventIds.length
       ? await supabase
-          .from("tickets_types")
+          .from("ticket_types")
           .select("id, event_id, name, max_capacity")
           .in("event_id", eventIds)
           .order("created_at")
@@ -269,13 +269,13 @@ export default function Home() {
     setSaving(true);
     const { error } = ticketForm.id
       ? await supabase
-          .from("tickets_types")
+          .from("ticket_types")
           .update({
             name: ticketForm.name.trim(),
             max_capacity: requestedCapacity,
           })
           .eq("id", ticketForm.id)
-      : await supabase.from("tickets_types").insert({
+      : await supabase.from("ticket_types").insert({
           event_id: selectedEvent.id,
           name: ticketForm.name.trim(),
           max_capacity: requestedCapacity,
@@ -291,7 +291,7 @@ export default function Home() {
   async function removeTicket(ticketId: string) {
     setSaving(true);
     const { error } = await supabase
-      .from("tickets_types")
+      .from("ticket_types")
       .delete()
       .eq("id", ticketId);
     setSaving(false);

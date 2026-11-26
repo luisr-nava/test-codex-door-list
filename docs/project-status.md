@@ -16,7 +16,7 @@
 
 ## Estado actual
 
-La base funcional para crear eventos y registrar asistentes está implementada en el código inspeccionado. Las migraciones disponibles cubren el esquema descrito y la última migración añade el flujo público de registros.
+La base funcional para crear eventos y registrar asistentes está implementada en el código inspeccionado. La migración pendiente `20261126000005_rename_ticket_tables.sql` alinea los nombres de tablas con el vocabulario del dominio y centraliza la vigencia del registro público; no está aplicada a la base de datos.
 
 ## Pendientes o no evidenciados
 

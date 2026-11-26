@@ -4,6 +4,14 @@ export type PublicTicketType = {
   remainingCapacity: number;
 };
 
+export type PublicEvent = {
+  id: string;
+  title: string;
+  description: string;
+  startsAt: string;
+  venue: string;
+};
+
 export type PublicEventRegistration = {
   event: {
     id: string;

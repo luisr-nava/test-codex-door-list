@@ -2,6 +2,7 @@ import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
+  PublicEvent,
   PublicEventRegistration,
   PublicTicket,
   RegistrationResultCode,
@@ -49,6 +50,30 @@ function isPublicEventRegistration(value: unknown): value is PublicEventRegistra
         && typeof ticket.remainingCapacity === "number"
       )),
   );
+}
+
+function isPublicEvent(value: unknown): value is PublicEvent {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<PublicEvent>;
+  return Boolean(
+    typeof candidate.id === "string"
+      && typeof candidate.title === "string"
+      && typeof candidate.description === "string"
+      && typeof candidate.startsAt === "string"
+      && typeof candidate.venue === "string",
+  );
+}
+
+export async function getPublicEvents() {
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("get_public_events");
+
+  if (error) throw error;
+  if (!Array.isArray(data) || !data.every(isPublicEvent)) {
+    throw new Error("The public events response has an invalid shape.");
+  }
+
+  return data;
 }
 
 export async function getPublicEventRegistration(eventId: string) {

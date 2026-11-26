@@ -1,33 +1,7 @@
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPublicEvents } from "@/lib/registrations/data";
 
 export const dynamic = "force-dynamic";
-
-type PublicEvent = {
-  id: string;
-  title: string;
-  description: string;
-  starts_at: string;
-  venue: string;
-  status: "published";
-};
-
-function buenosAiresDateKey(value: Date | string) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Argentina/Buenos_Aires",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date(value));
-  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value;
-
-  return `${part("year")}-${part("month")}-${part("day")}`;
-}
-
-function registrationIsOpen(event: PublicEvent) {
-  return event.status === "published"
-    && buenosAiresDateKey(event.starts_at) >= buenosAiresDateKey(new Date());
-}
 
 function formatEventDateTime(value: string) {
   return new Intl.DateTimeFormat("es-AR", {
@@ -38,16 +12,7 @@ function formatEventDateTime(value: string) {
 }
 
 export default async function Home() {
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("events")
-    .select("id, title, description, starts_at, venue, status")
-    .eq("status", "published")
-    .order("starts_at", { ascending: true });
-
-  if (error) throw error;
-
-  const events = (data as PublicEvent[]).filter(registrationIsOpen);
+  const events = await getPublicEvents();
 
   return (
     <main className="registration-page min-h-screen px-5 py-8 sm:px-8 sm:py-12">
@@ -80,7 +45,7 @@ export default async function Home() {
                   <dl className="mt-7 grid gap-3 sm:grid-cols-2">
                     <div className="event-detail-card">
                       <dt className="text-sm text-zinc-500">Fecha y hora</dt>
-                      <dd className="mt-2 font-semibold leading-6 text-zinc-100">{formatEventDateTime(event.starts_at)}</dd>
+                      <dd className="mt-2 font-semibold leading-6 text-zinc-100">{formatEventDateTime(event.startsAt)}</dd>
                     </div>
                     <div className="event-detail-card">
                       <dt className="text-sm text-zinc-500">Lugar</dt>

@@ -9,7 +9,7 @@
 - Cada tipo de entrada tiene nombre y capacidad positiva; el nombre es único dentro del evento.
 - La suma de capacidades de los tipos de entrada no puede superar el aforo del evento.
 - Un tipo de entrada no puede trasladarse a otro evento y el propietario de un evento no puede cambiarse.
-- El enlace público se ofrece cuando el evento está publicado y su fecha, comparada por día en Buenos Aires, no pasó.
+- El enlace público se ofrece cuando la regla de registro abierto de PostgreSQL determina que el evento publicado no pasó, comparado por día en Buenos Aires.
 - La landing `/` lista únicamente esos eventos publicados con registro abierto; el panel privado del organizador está en `/organizador`.
 
 ## Registro público
