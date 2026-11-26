@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import QRCode from "qrcode";
 import { formatEventDateTime } from "@/lib/date-time";
 import { getPublicTicket } from "@/lib/registrations/data";
+import { TicketCode } from "./ticket-code";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +16,12 @@ const statusContent = {
   },
   used: {
     label: "Usada",
-    description: "Esta entrada ya fue utilizada.",
+    description: "Esta entrada ya fue utilizada. Consultá con la organización en el acceso.",
     className: "border-amber-300/20 bg-amber-300/[0.07] text-amber-200",
   },
   revoke: {
     label: "Revocada",
-    description: "Esta entrada ya no es válida.",
+    description: "Esta entrada ya no es válida. Consultá con la organización en el acceso.",
     className: "border-rose-300/20 bg-rose-300/[0.07] text-rose-200",
   },
 } as const;
@@ -46,6 +47,7 @@ export default async function PublicTicketPage({
     },
   });
   const status = statusContent[ticket.status];
+  const isValidTicket = ticket.status === "valid";
 
   return (
     <main className="registration-page grid min-h-screen place-items-center px-5 py-8 sm:px-8 sm:py-12">
@@ -60,7 +62,7 @@ export default async function PublicTicketPage({
           </span>
         </header>
 
-        <div className="mt-7 grid gap-7 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div className={`mt-7 grid gap-7 ${isValidTicket ? "sm:grid-cols-[1fr_auto] sm:items-center" : ""}`}>
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-300">{ticket.ticketType.name}</p>
             <h2 className="mt-2 text-2xl font-bold text-white">{ticket.event.title}</h2>
@@ -71,13 +73,18 @@ export default async function PublicTicketPage({
               <div><dt className="text-zinc-500">Lugar</dt><dd className="mt-1 font-medium text-zinc-100">{ticket.event.venue}</dd></div>
             </dl>
           </div>
-          <img src={qrCode} alt={`Código QR de la entrada para ${ticket.event.title}`} width={180} height={180} className="mx-auto rounded-2xl bg-white p-3" />
+          {isValidTicket && (
+            <div className="order-first mx-auto w-full max-w-60 sm:order-none">
+              <img src={qrCode} alt={`Código QR de la entrada para ${ticket.event.title}`} width={240} height={240} className="h-auto w-full rounded-2xl bg-white p-3" />
+              <p className="mt-3 text-center text-sm font-medium leading-6 text-zinc-300">Presentá este código QR al ingresar al evento.</p>
+            </div>
+          )}
         </div>
 
         <div className={`mt-7 rounded-2xl border px-4 py-3 text-sm ${status.className}`}>
           {status.description}
         </div>
-        <p className="mt-6 break-all text-center font-mono text-xs tracking-[0.12em] text-zinc-500">{ticket.code}</p>
+        <TicketCode code={ticket.code} />
       </section>
     </main>
   );
