@@ -113,6 +113,7 @@ export default function EventDashboardPage() {
     () => createAttendeeExportRows(registrations, ticketTypes, tickets),
     [registrations, ticketTypes, tickets],
   );
+  const hasAttendees = attendees.length > 0;
   const soldByTicketType = useMemo(
     () => attendees.reduce((counts, attendee) => {
       counts.set(attendee.ticketTypeId, (counts.get(attendee.ticketTypeId) ?? 0) + 1);
@@ -155,8 +156,15 @@ export default function EventDashboardPage() {
           />
 
           <section className="mt-10">
-            <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-2xl font-bold">Asistentes registrados</h2><AttendeesCsvButton attendees={attendees} eventTitle={event.title} /></div>
-            {attendees.length ? <div className="event-detail-card mt-4 overflow-x-auto p-0"><table className="w-full min-w-[42rem] text-left text-sm"><thead className="border-b border-white/10 text-xs uppercase tracking-wide text-zinc-500"><tr><th className="px-5 py-4">Asistente</th><th className="px-5 py-4">Email</th><th className="px-5 py-4">Entrada</th><th className="px-5 py-4">Compra</th></tr></thead><tbody>{attendees.map((attendee) => <tr key={attendee.ticketCode} className="border-b border-white/10 last:border-0"><td className="px-5 py-4 font-medium">{attendee.attendeeName}</td><td className="px-5 py-4 text-zinc-300">{attendee.email}</td><td className="px-5 py-4 text-zinc-300">{attendee.ticketTypeName}</td><td className="px-5 py-4 text-zinc-400">{formatEventDateTime(attendee.purchasedAt, "medium")}</td></tr>)}</tbody></table></div> : <p className="event-detail-card mt-4 text-zinc-400">Aún no hay asistentes registrados.</p>}
+            <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-2xl font-bold">Asistentes registrados</h2>{hasAttendees && <AttendeesCsvButton attendees={attendees} eventTitle={event.title} />}</div>
+            <div className="event-detail-card mt-4 overflow-x-auto p-0">
+              <table className="w-full min-w-[42rem] text-left text-sm">
+                <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-zinc-500"><tr><th className="px-5 py-4">Asistente</th><th className="px-5 py-4">Email</th><th className="px-5 py-4">Entrada</th><th className="px-5 py-4">Compra</th></tr></thead>
+                <tbody>
+                  {hasAttendees ? attendees.map((attendee) => <tr key={attendee.ticketCode} className="border-b border-white/10 last:border-0"><td className="px-5 py-4 font-medium">{attendee.attendeeName}</td><td className="px-5 py-4 text-zinc-300">{attendee.email}</td><td className="px-5 py-4 text-zinc-300">{attendee.ticketTypeName}</td><td className="px-5 py-4 text-zinc-400">{formatEventDateTime(attendee.purchasedAt, "medium")}</td></tr>) : <tr><td className="px-5 py-8 text-center text-zinc-400" colSpan={4}>Los asistentes registrados aparecerán aquí.</td></tr>}
+                </tbody>
+              </table>
+            </div>
           </section>
         </>}
       </div>
