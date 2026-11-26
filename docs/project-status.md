@@ -4,6 +4,7 @@
 
 - Panel de organizador con registro e inicio de sesión mediante Supabase Auth.
 - Landing pública de eventos en `/` y panel del organizador separado en `/organizador`.
+- Landing pública con carga progresiva, reintento seguro y resumen de disponibilidad por evento.
 - CRUD de eventos propios con estados borrador/publicado.
 - CRUD de tipos de entrada por evento.
 - Panel privado `/dashboard` para consultar eventos propios, ocupación por tipo de entrada y asistentes registrados.

@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   PublicEvent,
   PublicEventRegistration,
+  PublicEventSummary,
   PublicTicket,
   RegistrationResultCode,
 } from "@/lib/types";
@@ -64,12 +65,21 @@ function isPublicEvent(value: unknown): value is PublicEvent {
   );
 }
 
+function isPublicEventSummary(value: unknown): value is PublicEventSummary {
+  if (!isPublicEvent(value)) return false;
+  const candidate = value as Partial<PublicEventSummary>;
+  return (
+    (candidate.availableTicketTypes === undefined || typeof candidate.availableTicketTypes === "number")
+    && (candidate.remainingCapacity === undefined || typeof candidate.remainingCapacity === "number")
+  );
+}
+
 export async function getPublicEvents() {
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase.rpc("get_public_events");
 
   if (error) throw error;
-  if (!Array.isArray(data) || !data.every(isPublicEvent)) {
+  if (!Array.isArray(data) || !data.every(isPublicEventSummary)) {
     throw new Error("The public events response has an invalid shape.");
   }
 

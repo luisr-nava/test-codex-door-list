@@ -53,6 +53,11 @@ export type PublicEvent = {
   venue: string;
 };
 
+export type PublicEventSummary = PublicEvent & {
+  availableTicketTypes?: number;
+  remainingCapacity?: number;
+};
+
 export type PublicTicketType = {
   id: string;
   name: string;

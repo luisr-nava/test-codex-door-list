@@ -60,6 +60,10 @@ body {
 .primary-button:hover { background: #8b5cf6; }
 .secondary-button { background: rgb(255 255 255 / 0.1); color: #e4e4e7; }
 .secondary-button:hover { background: rgb(255 255 255 / 0.16); }
+.primary-button:focus-visible, .secondary-button:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 3px;
+}
 .primary-button:disabled, .secondary-button:disabled { cursor: not-allowed; opacity: 0.55; }
 .primary-button:active:not(:disabled), .secondary-button:active:not(:disabled) { transform: scale(0.97); }
 

@@ -19,7 +19,7 @@ El enum `public.event_status` contiene `draft` y `published`. Hay índices para 
 - La capacidad de una entrada no puede reducirse por debajo de sus registros confirmados.
 - `registrations` impone email normalizado, formato básico, límites de longitud y un índice único `(event_id, email)`.
 - `registration_is_open(event_status, timestamptz)` centraliza la vigencia pública por estado y fecha de Buenos Aires.
-- `get_public_events()` y `get_public_event_registration(uuid)` devuelven datos públicos solo cuando la regla de registro abierto se cumple.
+- `get_public_events()` y `get_public_event_registration(uuid)` devuelven datos públicos solo cuando la regla de registro abierto se cumple. La lista pública resume tipos de entrada disponibles y plazas restantes por evento.
 - `create_public_registration(...)` normaliza datos, valida vigencia, duplicados y capacidad, e inserta el registro devolviendo un código de resultado.
 - `create_public_registration(...)` emite atómicamente una entrada después de crear el registro y devuelve su código secreto.
 - `get_public_ticket(text)` solo devuelve una entrada cuando recibe su código completo y no expone acceso directo a la tabla.
@@ -45,3 +45,4 @@ RLS está habilitado en `events`, `ticket_types` y `registrations`.
 - `20261126000007_add_event_published_at.sql`: añade la fecha de publicación y la conserva al publicar un evento.
 - `20261126000008_allow_owners_to_read_tickets.sql`: permite por RLS que cada organizador autenticado lea los tickets de sus propios eventos para exportar asistentes.
 - `20261126000006_fix_ticket_type_capacity_trigger.sql`: aplicada; actualiza la función del trigger de capacidad para consultar `ticket_types`.
+- `20261126000009_add_public_event_availability_summary.sql`: añade a la RPC pública de eventos el resumen de tipos de entrada disponibles y plazas restantes.
