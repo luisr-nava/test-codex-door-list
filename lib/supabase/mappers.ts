@@ -1,4 +1,9 @@
-import type { Event, EventStatus, TicketType } from "@/lib/types";
+import type {
+  Event,
+  EventStatus,
+  OrganizerRegistration,
+  TicketType,
+} from "@/lib/types";
 
 type EventRow = {
   id: string;
@@ -15,6 +20,15 @@ type TicketTypeRow = {
   event_id: string;
   name: string;
   max_capacity: number;
+};
+
+type RegistrationRow = {
+  id: string;
+  event_id: string;
+  ticket_type_id: string;
+  attendee_name: string;
+  email: string;
+  created_at: string;
 };
 
 export function mapEvent(row: EventRow): Event {
@@ -35,6 +49,19 @@ export function mapTicketType(row: TicketTypeRow): TicketType {
     eventId: row.event_id,
     name: row.name,
     maxCapacity: row.max_capacity,
+  };
+}
+
+export function mapOrganizerRegistration(
+  row: RegistrationRow,
+): OrganizerRegistration {
+  return {
+    id: row.id,
+    eventId: row.event_id,
+    ticketTypeId: row.ticket_type_id,
+    attendeeName: row.attendee_name,
+    email: row.email,
+    createdAt: row.created_at,
   };
 }
 

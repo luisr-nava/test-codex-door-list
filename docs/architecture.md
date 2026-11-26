@@ -14,9 +14,11 @@
 - `app/layout.tsx`: layout raíz, idioma `es` y metadatos.
 - `app/page.tsx`: landing pública; lista eventos mediante la RPC pública que centraliza la regla de registro abierto.
 - `app/organizador/page.tsx`: cliente principal del panel del organizador. Gestiona sesión, CRUD de eventos y tipos de entrada, cálculo de aforo y enlaces públicos.
+- `app/dashboard/page.tsx` y `app/dashboard/[eventId]/page.tsx`: panel privado de consulta de eventos, aforo por tipo de entrada, evolución diaria de registros y asistentes registrados.
+- `app/api/events/[eventId]/daily-registrations/route.ts`: endpoint autenticado para la serie diaria de registros del organizador.
 - `app/eventos/[eventId]/registro/page.tsx`: página pública de registro; valida el UUID, carga los datos mediante servidor y muestra el evento.
 - `app/eventos/[eventId]/registro/registration-form.tsx`: formulario cliente; selecciona entrada, muestra disponibilidad y procesa estados de éxito/error.
-- `app/api/eventos/[eventId]/registro/route.ts`: API pública de registro; valida JSON camelCase, traduce códigos de negocio a HTTP y refresca disponibilidades.
+- `app/api/events/[eventId]/register/route.ts`: API pública de registro; valida JSON camelCase, traduce códigos de negocio a HTTP y refresca disponibilidades.
 - `app/eventos/[eventId]/registro/not-found.tsx`: pantalla para eventos inexistentes, no publicados o fuera de fecha.
 - `app/entradas/[code]/page.tsx`: página pública de una entrada emitida; consulta por código secreto y renderiza sus datos, estado y QR.
 - `lib/supabase/client.ts`: cliente Supabase para componentes cliente, usando variables públicas de entorno.
