@@ -43,6 +43,19 @@ export type RegistrationResultCode =
   | "DUPLICATE_EMAIL"
   | "INVALID_INPUT";
 
+export type RegistrationRequest = {
+  ticketTypeId: string;
+  name: string;
+  email: string;
+};
+
+export type RegistrationSuccessResponse = {
+  ticketCode: string;
+  emailStatus: "sent" | "failed";
+};
+
+export type ApiErrorResponse = { error: string };
+
 export type PublicTicket = {
   code: string;
   status: "valid" | "used" | "revoke";

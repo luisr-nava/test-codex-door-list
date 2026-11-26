@@ -1,11 +1,19 @@
 import Link from "next/link";
 import { formatEventDateTime } from "@/lib/date-time";
 import { getPublicEvents } from "@/lib/registrations/data";
+import type { PublicEvent } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const events = await getPublicEvents();
+  let events: PublicEvent[] = [];
+  let loadFailed = false;
+  try {
+    events = await getPublicEvents();
+  } catch (error) {
+    loadFailed = true;
+    console.error("Public events could not be loaded.", error);
+  }
 
   return (
     <main className="registration-page min-h-screen px-5 py-8 sm:px-8 sm:py-12">
@@ -27,7 +35,14 @@ export default async function Home() {
             Encontrá los eventos disponibles y completá tu registro en pocos pasos.
           </p>
 
-          {events.length ? (
+          {loadFailed ? (
+            <section className="mt-10 rounded-3xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-12 text-center">
+              <h2 className="text-2xl font-bold text-white">No pudimos cargar los eventos</h2>
+              <p className="mx-auto mt-3 max-w-lg leading-7 text-zinc-400">
+                Intenta nuevamente en unos minutos.
+              </p>
+            </section>
+          ) : events.length ? (
             <div className="mt-10 grid gap-5 md:grid-cols-2">
               {events.map((event) => (
                 <article key={event.id} className="rounded-3xl border border-white/10 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 sm:p-7">

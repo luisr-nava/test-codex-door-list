@@ -1,9 +1,15 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { registerForEvent } from "./actions";
-import type { PublicTicketType, RegistrationFormState } from "@/lib/types";
+import { validateRegistrationRequest } from "@/lib/registrations/validation";
+import type {
+  ApiErrorResponse,
+  PublicEventRegistration,
+  PublicTicketType,
+  RegistrationFormState,
+  RegistrationSuccessResponse,
+} from "@/lib/types";
 
 type RegistrationFormProps = {
   eventId: string;
@@ -16,11 +22,11 @@ export function RegistrationForm({
   eventTitle,
   initialTicketTypes,
 }: RegistrationFormProps) {
-  const initialState = useMemo<RegistrationFormState>(() => ({
+  const [state, setState] = useState<RegistrationFormState>({
     status: "idle",
     ticketTypes: initialTicketTypes,
-  }), [initialTicketTypes]);
-  const [state, formAction, pending] = useActionState(registerForEvent, initialState);
+  });
+  const [pending, setPending] = useState(false);
   const [ticketTypeId, setTicketTypeId] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,6 +37,79 @@ export function RegistrationForm({
     const selectedTicket = ticketTypes.find((ticket) => ticket.id === ticketTypeId);
     if (selectedTicket && selectedTicket.remainingCapacity === 0) setTicketTypeId("");
   }, [ticketTypeId, ticketTypes]);
+
+  async function refreshTicketTypes() {
+    const response = await fetch(`/api/eventos/${eventId}/registro`);
+    if (!response.ok) return;
+    const registration = await response.json() as PublicEventRegistration;
+    setState((current) => ({ ...current, ticketTypes: registration.ticketTypes }));
+  }
+
+  async function submitRegistration(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const input = { ticketTypeId, name: name.trim(), email: email.trim() };
+    const fieldErrors = validateRegistrationRequest(input);
+    if (Object.keys(fieldErrors).length) {
+      setState({
+        status: "error",
+        code: "INVALID_INPUT",
+        message: "Revisa los campos marcados antes de continuar.",
+        fieldErrors,
+        ticketTypes,
+      });
+      return;
+    }
+
+    setPending(true);
+    try {
+      const response = await fetch(`/api/eventos/${eventId}/registro`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as ApiErrorResponse | null;
+        const code = payload?.error ?? "UNEXPECTED_ERROR";
+        if (code === "TICKET_UNAVAILABLE") await refreshTicketTypes();
+        setState((current) => ({
+          status: "error",
+          code: code as RegistrationFormState["code"],
+          message: code === "EVENT_UNAVAILABLE"
+            ? "El registro para este evento ya no está disponible."
+            : code === "TICKET_UNAVAILABLE"
+              ? "La entrada seleccionada acaba de agotarse. Elige otra opción disponible."
+              : code === "DUPLICATE_EMAIL"
+                ? "Este email ya está registrado para el evento."
+                : code === "INVALID_INPUT"
+                  ? "Revisa los datos e intenta nuevamente."
+                  : "No pudimos completar el registro. Intenta nuevamente.",
+          ticketTypes: current.ticketTypes,
+        }));
+        return;
+      }
+
+      const payload = await response.json() as RegistrationSuccessResponse;
+      setState({
+        status: "success",
+        code: "SUCCESS",
+        message: payload.emailStatus === "sent"
+          ? "Tu lugar quedó confirmado. Te enviamos la entrada por email."
+          : "Tu lugar quedó confirmado, pero no pudimos enviarte el email.",
+        ticketCode: payload.ticketCode,
+        emailStatus: payload.emailStatus,
+      });
+    } catch {
+      setState((current) => ({
+        status: "error",
+        code: "UNEXPECTED_ERROR",
+        message: "No pudimos completar el registro. Intenta nuevamente.",
+        ticketTypes: current.ticketTypes,
+      }));
+    } finally {
+      setPending(false);
+    }
+  }
 
   if (state.status === "success") {
     return (
@@ -71,8 +150,7 @@ export function RegistrationForm({
   const eventClosed = state.code === "EVENT_UNAVAILABLE";
 
   return (
-    <form action={formAction} className="rounded-3xl border border-white/10 bg-white/[0.055] p-6 shadow-2xl shadow-black/30 sm:p-8">
-      <input type="hidden" name="eventId" value={eventId} />
+    <form onSubmit={submitRegistration} className="rounded-3xl border border-white/10 bg-white/[0.055] p-6 shadow-2xl shadow-black/30 sm:p-8">
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-300">Reserva tu lugar</p>
         <h2 className="mt-2 text-2xl font-bold text-white">Datos del asistente</h2>

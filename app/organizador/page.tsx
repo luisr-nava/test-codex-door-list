@@ -27,7 +27,7 @@ function readableError(error: { message: string } | null) {
   if (error.message.includes("combined ticket capacity")) {
     return "El aforo total de los tipos de entrada supera el límite del evento.";
   }
-  return error.message;
+  return "No pudimos completar la operación. Intenta nuevamente.";
 }
 
 export default function OrganizerPage() {
@@ -170,16 +170,20 @@ export default function OrganizerPage() {
     event.preventDefault();
     setSaving(true);
     setMessage("");
-    const result =
-      authMode === "signin"
+    try {
+      const result = authMode === "signin"
         ? await supabase.auth.signInWithPassword({ email, password })
         : await supabase.auth.signUp({ email, password });
-    setSaving(false);
-    if (result.error) setMessage(readableError(result.error));
-    else if (authMode === "signup" && !result.data.session) {
-      setMessage(
-        "Revisa tu correo para confirmar la cuenta y luego inicia sesión.",
-      );
+      if (result.error) setMessage(readableError(result.error));
+      else if (authMode === "signup" && !result.data.session) {
+        setMessage(
+          "Revisa tu correo para confirmar la cuenta y luego inicia sesión.",
+        );
+      }
+    } catch {
+      setMessage("No pudimos completar la operación. Intenta nuevamente.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -195,11 +199,10 @@ export default function OrganizerPage() {
       maxCapacity: Number(eventForm.maxCapacity),
       status: eventForm.status,
     });
-    const result = editingEvent
-      ? await supabase.from("events").update(payload).eq("id", editingEvent.id)
-      : await supabase
-          .from("events")
-          .insert(toEventRecord({
+    try {
+      const result = editingEvent
+        ? await supabase.from("events").update(payload).eq("id", editingEvent.id)
+        : await supabase.from("events").insert(toEventRecord({
             title: eventForm.title.trim(),
             description: eventForm.description.trim(),
             startsAt: new Date(eventForm.startsAt).toISOString(),
@@ -208,15 +211,19 @@ export default function OrganizerPage() {
             status: eventForm.status,
             ownerId: session?.user.id,
           }));
-    setSaving(false);
-    if (result.error) {
-      setMessage(readableError(result.error));
-      return;
+      if (result.error) {
+        setMessage(readableError(result.error));
+        return;
+      }
+      await loadOrganizerData();
+      setEditingEventId(null);
+      setEventForm(emptyEvent);
+      setMessage(editingEvent ? "Evento actualizado." : "Evento creado.");
+    } catch {
+      setMessage("No pudimos completar la operación. Intenta nuevamente.");
+    } finally {
+      setSaving(false);
     }
-    await loadOrganizerData();
-    setEditingEventId(null);
-    setEventForm(emptyEvent);
-    setMessage(editingEvent ? "Evento actualizado." : "Evento creado.");
   }
 
   async function removeEvent(eventId = editingEvent?.id) {
@@ -226,14 +233,19 @@ export default function OrganizerPage() {
     )
       return;
     setSaving(true);
-    const { error } = await supabase.from("events").delete().eq("id", eventId);
-    setSaving(false);
-    if (error) setMessage(readableError(error));
-    else {
-      await loadOrganizerData();
-      if (eventId === selectedEventId) setSelectedEventId(null);
-      if (eventId === editingEventId) startNewEvent();
-      setMessage("Evento eliminado.");
+    try {
+      const { error } = await supabase.from("events").delete().eq("id", eventId);
+      if (error) setMessage(readableError(error));
+      else {
+        await loadOrganizerData();
+        if (eventId === selectedEventId) setSelectedEventId(null);
+        if (eventId === editingEventId) startNewEvent();
+        setMessage("Evento eliminado.");
+      }
+    } catch {
+      setMessage("No pudimos completar la operación. Intenta nuevamente.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -255,37 +267,47 @@ export default function OrganizerPage() {
       return;
     }
     setSaving(true);
-    const { error } = ticketForm.id
-      ? await supabase
-          .from("ticket_types")
-          .update(toTicketTypeRecord({
+    try {
+      const { error } = ticketForm.id
+        ? await supabase
+            .from("ticket_types")
+            .update(toTicketTypeRecord({
+              eventId: selectedEvent.id,
+              name: ticketForm.name.trim(),
+              maxCapacity: requestedCapacity,
+            }))
+            .eq("id", ticketForm.id)
+        : await supabase.from("ticket_types").insert(toTicketTypeRecord({
             eventId: selectedEvent.id,
             name: ticketForm.name.trim(),
             maxCapacity: requestedCapacity,
-          }))
-          .eq("id", ticketForm.id)
-      : await supabase.from("ticket_types").insert(toTicketTypeRecord({
-          eventId: selectedEvent.id,
-          name: ticketForm.name.trim(),
-          maxCapacity: requestedCapacity,
-        }));
-    setSaving(false);
-    if (error) setTicketMessage(readableError(error));
-    else {
-      setTicketForm({ id: "", name: "", maxCapacity: "" });
-      await loadOrganizerData();
+          }));
+      if (error) setTicketMessage(readableError(error));
+      else {
+        setTicketForm({ id: "", name: "", maxCapacity: "" });
+        await loadOrganizerData();
+      }
+    } catch {
+      setTicketMessage("No pudimos completar la operación. Intenta nuevamente.");
+    } finally {
+      setSaving(false);
     }
   }
 
   async function removeTicket(ticketId: string) {
     setSaving(true);
-    const { error } = await supabase
-      .from("ticket_types")
-      .delete()
-      .eq("id", ticketId);
-    setSaving(false);
-    if (error) setMessage(readableError(error));
-    else await loadOrganizerData();
+    try {
+      const { error } = await supabase
+        .from("ticket_types")
+        .delete()
+        .eq("id", ticketId);
+      if (error) setMessage(readableError(error));
+      else await loadOrganizerData();
+    } catch {
+      setMessage("No pudimos completar la operación. Intenta nuevamente.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading)

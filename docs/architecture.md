@@ -16,7 +16,7 @@
 - `app/organizador/page.tsx`: cliente principal del panel del organizador. Gestiona sesión, CRUD de eventos y tipos de entrada, cálculo de aforo y enlaces públicos.
 - `app/eventos/[eventId]/registro/page.tsx`: página pública de registro; valida el UUID, carga los datos mediante servidor y muestra el evento.
 - `app/eventos/[eventId]/registro/registration-form.tsx`: formulario cliente; selecciona entrada, muestra disponibilidad y procesa estados de éxito/error.
-- `app/eventos/[eventId]/registro/actions.ts`: Server Action de registro; valida campos, invoca la RPC y refresca entradas cuando una opción se agota.
+- `app/api/eventos/[eventId]/registro/route.ts`: API pública de registro; valida JSON camelCase, traduce códigos de negocio a HTTP y refresca disponibilidades.
 - `app/eventos/[eventId]/registro/not-found.tsx`: pantalla para eventos inexistentes, no publicados o fuera de fecha.
 - `app/entradas/[code]/page.tsx`: página pública de una entrada emitida; consulta por código secreto y renderiza sus datos, estado y QR.
 - `lib/supabase/client.ts`: cliente Supabase para componentes cliente, usando variables públicas de entorno.
@@ -32,4 +32,4 @@
 
 ## Flujo de alto nivel
 
-La landing pública consulta las RPC que centralizan la regla de registro abierto según el día de Buenos Aires. El panel en `/organizador` autentica al organizador con Supabase Auth y consulta directamente `events` y `ticket_types`. El registro público se renderiza en servidor, usa RPC de Supabase para leer disponibilidad, crear el registro y emitir una entrada, y delega la validación final de disponibilidad y unicidad a PostgreSQL. Tras emitirla, la Server Action obtiene la entrada por su código secreto y envía un email con QR inline mediante Resend. La entrada pública se consulta exclusivamente por su código secreto.
+La landing pública consulta las RPC que centralizan la regla de registro abierto según el día de Buenos Aires. El panel en `/organizador` autentica al organizador con Supabase Auth y consulta directamente `events` y `ticket_types`. El formulario público usa la API de registro para leer disponibilidad, crear el registro y emitir una entrada; PostgreSQL conserva la validación final de disponibilidad y unicidad. Tras emitirla, el Route Handler obtiene la entrada por su código secreto y envía un email con QR inline mediante Resend. La entrada pública se consulta exclusivamente por su código secreto.

@@ -21,6 +21,7 @@
 - Un email solo puede registrarse una vez por evento.
 - La confirmación vuelve a comprobar evento, entrada y cupo dentro de PostgreSQL.
 - Si una entrada se agota durante el proceso, el formulario refresca las disponibilidades.
+- La API de registro devuelve errores como `{ error }`: evento no disponible usa HTTP 404, entrada agotada o email duplicado HTTP 409 y datos inválidos HTTP 400; la interfaz conserva mensajes diferenciados.
 - Al confirmar, se emite exactamente una entrada asociada al registro. Su código público tiene 64 caracteres hexadecimales impredecibles y se muestra como QR.
 - Tras la emisión, se envía a la dirección registrada un email con el nombre del evento, fecha, lugar y el QR embebido. Un fallo del proveedor de correo no revierte el registro ni la entrada ya confirmados; se informa al asistente para que pueda conservar su entrada desde la pantalla.
 - Una entrada puede estar `valid`, `used` o `revoke`. La consulta pública de una entrada solo acepta su código secreto, sin acceso por identificadores secuenciales ni lectura directa de la tabla.
