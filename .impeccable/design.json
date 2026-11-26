@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-26T00:00:00-03:00",
+  "title": "Design System: Door List",
+  "extensions": {
+    "colorMeta": {
+      "night": { "role": "neutral", "displayName": "Noche neutra", "canonical": "#09090b", "tonalRamp": ["#09090b", "#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#fafafa"] },
+      "surface-text": { "role": "neutral", "displayName": "Blanco de superficie", "canonical": "#fafafa", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#e4e4e7", "#fafafa"] },
+      "violet-action": { "role": "primary", "displayName": "Violeta de acción", "canonical": "#7c3aed", "tonalRamp": ["#2e1065", "#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#8b5cf6", "#a78bfa", "#ddd6fe"] },
+      "violet-hover": { "role": "primary", "displayName": "Violeta de respuesta", "canonical": "#8b5cf6", "tonalRamp": ["#2e1065", "#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#8b5cf6", "#a78bfa", "#ddd6fe"] },
+      "violet-focus": { "role": "primary", "displayName": "Violeta de foco", "canonical": "#a78bfa", "tonalRamp": ["#2e1065", "#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#8b5cf6", "#a78bfa", "#ede9fe"] },
+      "violet-muted": { "role": "primary", "displayName": "Violeta de etiqueta", "canonical": "#c4b5fd", "tonalRamp": ["#2e1065", "#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#8b5cf6", "#c4b5fd", "#ede9fe"] },
+      "zinc-strong": { "role": "neutral", "displayName": "Zinc estructural", "canonical": "#e4e4e7", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#e4e4e7", "#fafafa"] },
+      "zinc-muted": { "role": "neutral", "displayName": "Zinc secundario", "canonical": "#a1a1aa", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#fafafa"] },
+      "success": { "role": "secondary", "displayName": "Verde de confirmación", "canonical": "#6ee7b7", "tonalRamp": ["#022c22", "#064e3b", "#065f46", "#047857", "#10b981", "#34d399", "#6ee7b7", "#d1fae5"] }
+    },
+    "typographyMeta": {
+      "body": { "displayName": "Cuerpo operativo", "purpose": "Lectura rápida de formularios, datos y explicaciones." },
+      "label": { "displayName": "Etiqueta de estado", "purpose": "Navegación, rótulos y estados de alta prioridad." }
+    },
+    "shadows": [
+      { "name": "success-confirmed", "value": "0 24px 70px rgb(0 0 0 / 0.3)", "purpose": "Aísla el panel de confirmación de registro." }
+    ],
+    "motion": [
+      { "name": "control-transition", "value": "150ms cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Respuesta breve de botones al interactuar." },
+      { "name": "reduced-motion", "value": "0ms when prefers-reduced-motion", "purpose": "Desactiva las transiciones de controles cuando el usuario lo solicita." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de una tarea de registro o gestión.",
+      "html": "<button class=\"ds-btn-primary\">Reservar mi entrada</button>",
+      "css": ".ds-btn-primary { border: 0; border-radius: .75rem; background: #7c3aed; color: #fff; padding: .7rem 1rem; font-family: Arial, Helvetica, sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background-color 150ms ease, transform 150ms cubic-bezier(.22, 1, .36, 1); } .ds-btn-primary:hover { background: #8b5cf6; } .ds-btn-primary:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; } .ds-btn-primary:active { transform: scale(.97); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción secundaria o navegación de apoyo.",
+      "html": "<button class=\"ds-btn-secondary\">Volver al panel</button>",
+      "css": ".ds-btn-secondary { border: 0; border-radius: .75rem; background: rgb(255 255 255 / .1); color: #e4e4e7; padding: .7rem 1rem; font-family: Arial, Helvetica, sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background-color 150ms ease, transform 150ms cubic-bezier(.22, 1, .36, 1); } .ds-btn-secondary:hover { background: rgb(255 255 255 / .16); } .ds-btn-secondary:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; } .ds-btn-secondary:active { transform: scale(.97); }"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field-default",
+      "description": "Campo de formulario oscuro y de alto contraste.",
+      "html": "<label class=\"ds-field-label\">Correo<input class=\"ds-field\" type=\"email\" placeholder=\"nombre@correo.com\"></label>",
+      "css": ".ds-field-label { display: grid; gap: .45rem; color: #e4e4e7; font-family: Arial, Helvetica, sans-serif; font-size: .875rem; font-weight: 600; } .ds-field { width: 100%; box-sizing: border-box; border: 1px solid rgb(255 255 255 / .12); border-radius: .75rem; background: rgb(255 255 255 / .06); color: #fafafa; padding: .7rem .8rem; font: inherit; } .ds-field::placeholder { color: #a1a1aa; } .ds-field:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; } .ds-field:disabled { cursor: not-allowed; opacity: .6; }"
+    },
+    {
+      "name": "Detail Card",
+      "kind": "card",
+      "refersTo": "event-detail-card",
+      "description": "Contenedor para detalles de evento, estados vacíos y datos operativos.",
+      "html": "<article class=\"ds-card\"><p class=\"ds-card-label\">Fecha y hora</p><strong class=\"ds-card-value\">Viernes, 20:00</strong></article>",
+      "css": ".ds-card { border: 1px solid rgb(255 255 255 / .09); border-radius: 1rem; background: rgb(255 255 255 / .035); padding: 1rem; color: #fafafa; font-family: Arial, Helvetica, sans-serif; } .ds-card-label { margin: 0; color: #a1a1aa; font-size: .875rem; } .ds-card-value { display: block; margin-top: .5rem; font-size: 1rem; }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "status-chip",
+      "description": "Estado compacto para publicación o disponibilidad.",
+      "html": "<span class=\"ds-chip\">Publicado</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; border-radius: 9999px; background: rgb(255 255 255 / .1); color: #e4e4e7; padding: .25rem .75rem; font-family: Arial, Helvetica, sans-serif; font-size: .75rem; font-weight: 600; }"
+    },
+    {
+      "name": "Success Panel",
+      "kind": "custom",
+      "refersTo": "registration-success",
+      "description": "Confirmación destacada después de emitir una entrada.",
+      "html": "<section class=\"ds-success\"><span class=\"ds-success-icon\">✓</span><strong>Registro confirmado</strong><p>Tu entrada está lista.</p></section>",
+      "css": ".ds-success { border: 1px solid rgb(110 231 183 / .2); border-radius: 1.5rem; background: rgb(110 231 183 / .06); padding: 2rem; box-shadow: 0 24px 70px rgb(0 0 0 / .3); color: #fafafa; font-family: Arial, Helvetica, sans-serif; } .ds-success-icon { display: grid; width: 3rem; height: 3rem; margin-bottom: 1.5rem; place-items: center; border-radius: 9999px; background: rgb(110 231 183 / .14); color: #6ee7b7; font-size: 1.35rem; font-weight: 800; } .ds-success p { margin: .5rem 0 0; color: #d1fae5; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El puesto de control nocturno",
+    "overview": "Door List usa un entorno oscuro, concentrado y de alta legibilidad para resolver tareas de registro y acceso sin distracciones. La interfaz se comporta como una consola de operación: superficies oscuras en capas, acciones violeta claras y señales de estado que se distinguen con rapidez. La densidad es cómoda para formularios, paneles y tablas. El lenguaje visual evita el ornamento: cada borde, bloque de información y cambio de color debe facilitar una decisión o una acción en el contexto rápido de un evento.",
+    "keyCharacteristics": ["Oscuridad neutra con profundidad creada por capas translúcidas, no por decoración.", "Violeta como señal de acción, selección y foco.", "Estados semánticos claros: verde para éxito y disponibilidad; cálidos para advertencias y errores.", "Controles grandes, redondeados y predecibles para una operación ágil."],
+    "rules": [
+      { "name": "The Signal-Only Violet Rule", "body": "El violeta marca una acción, una selección o un foco; no se usa como adorno de fondo persistente.", "section": "colors" },
+      { "name": "The Read-At-The-Gate Rule", "body": "La jerarquía debe poder distinguir acción, estado y dato importante de un vistazo; evitar textos de bajo contraste o estilos tipográficos decorativos.", "section": "typography" },
+      { "name": "The Tonal Layer Rule", "body": "Las superficies se distinguen primero por opacidad y borde; añadir sombra solo cuando ayude a confirmar o aislar un estado importante.", "section": "elevation" }
+    ],
+    "dos": ["Do usar el violeta para la siguiente acción operativa, el foco o el elemento seleccionado.", "Do mantener las superficies oscuras con bordes y contrastes suficientes para separar formularios, tablas y tarjetas.", "Do usar estados de éxito, advertencia y error con color semántico acompañado de texto claro.", "Do conservar acciones y controles con áreas cómodas para uso rápido."],
+    "donts": ["Don't añadir ilustraciones, texturas o efectos decorativos que compitan con la operación en puerta.", "Don't usar el violeta como relleno ambiental en toda una pantalla.", "Don't depender solo del color para comunicar un estado o un error.", "Don't introducir tipografías expresivas o una densidad que dificulte escanear datos y acciones."]
+  }
+}
