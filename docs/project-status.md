@@ -6,6 +6,8 @@
 - Landing pública de eventos en `/` y panel del organizador separado en `/organizador`.
 - CRUD de eventos propios con estados borrador/publicado.
 - CRUD de tipos de entrada por evento.
+- Panel privado `/dashboard` para consultar eventos propios, ocupación por tipo de entrada y asistentes registrados.
+- Gráfica diaria de registros desde la publicación en el detalle privado de cada evento.
 - Visualización de aforo asignado y validación de capacidad en UI y base de datos.
 - Enlace público de registro, apertura en nueva pestaña y copia al portapapeles.
 - Página pública con datos del evento, disponibilidad por entrada y estado de agotado.

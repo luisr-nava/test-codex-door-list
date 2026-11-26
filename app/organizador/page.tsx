@@ -312,25 +312,27 @@ export default function OrganizerPage() {
 
   if (loading)
     return (
-      <main className="grid min-h-screen place-items-center text-zinc-300">
-        Cargando…
+      <main className="grid min-h-screen place-items-center px-5 py-8 sm:px-8 sm:py-12">
+        <section className="event-detail-card" aria-live="polite">
+          <p className="text-zinc-400">Cargando eventos…</p>
+        </section>
       </main>
     );
 
   if (!session) {
     return (
-      <main className="grid min-h-screen place-items-center px-6 py-12">
+      <main className="registration-page grid min-h-screen place-items-center px-5 py-8 sm:px-8 sm:py-12">
         <form
           onSubmit={submitAuth}
-          className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-300">
+          className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.055] p-6 sm:p-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-300">
             Door List
           </p>
           <h1 className="mt-3 text-3xl font-bold">Panel del organizador</h1>
-          <p className="mt-2 text-zinc-400">
+          <p className="mt-2 leading-6 text-zinc-400">
             Gestiona tus eventos y sus entradas con tu cuenta de Supabase.
           </p>
-          <label className="mt-7 block text-sm">
+          <label className="mt-7 block text-sm font-medium text-zinc-200">
             Correo
             <input
               required
@@ -340,7 +342,7 @@ export default function OrganizerPage() {
               className="field"
             />
           </label>
-          <label className="mt-4 block text-sm">
+          <label className="mt-5 block text-sm font-medium text-zinc-200">
             Contraseña
             <input
               required
@@ -380,15 +382,19 @@ export default function OrganizerPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-5 py-8 sm:px-8">
-      <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <main className="mx-auto min-h-screen max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
+      <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-300">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-300">
             Door List
           </p>
-          <h1 className="mt-1 text-3xl font-bold">Eventos</h1>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Eventos</h1>
+          <p className="mt-2 leading-6 text-zinc-400">Crea, publica y administra las entradas de tus eventos.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <Link href="/dashboard" className="secondary-button">
+            Ver panel
+          </Link>
           <button
             type="button"
             onClick={startNewEvent}
@@ -406,15 +412,15 @@ export default function OrganizerPage() {
       {message && (
         <p
           aria-live="polite"
-          className="mb-5 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-200">
+          className="mt-8 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-300">
           {message}
         </p>
       )}
-      <div className="space-y-6">
-        <section className="grid gap-6 xl:grid-cols-2">
+      <div className="mt-8 space-y-8">
+        <section className="grid gap-8 xl:grid-cols-2">
           <form
             onSubmit={saveEvent}
-            className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            className="rounded-3xl border border-white/10 bg-white/[0.055] p-6 sm:p-8">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-xl font-bold">
                 {editingEvent ? "Editar evento" : "Nuevo evento"}
@@ -427,7 +433,7 @@ export default function OrganizerPage() {
                 </span>
               )}
             </div>
-            <label className="mt-5 block text-sm">
+            <label className="mt-5 block text-sm font-medium text-zinc-200">
               Título
               <input
                 required
@@ -438,7 +444,7 @@ export default function OrganizerPage() {
                 className="field"
               />
             </label>
-            <label className="mt-4 block text-sm">
+            <label className="mt-5 block text-sm font-medium text-zinc-200">
               Descripción
               <textarea
                 required
@@ -449,8 +455,8 @@ export default function OrganizerPage() {
                 className="field min-h-24 resize-y"
               />
             </label>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm">
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <label className="text-sm font-medium text-zinc-200">
                 Fecha y hora
                 <input
                   required
@@ -462,7 +468,7 @@ export default function OrganizerPage() {
                   className="field"
                 />
               </label>
-              <label className="text-sm">
+              <label className="text-sm font-medium text-zinc-200">
                 Lugar
                 <input
                   required
@@ -474,8 +480,8 @@ export default function OrganizerPage() {
                 />
               </label>
             </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm">
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <label className="text-sm font-medium text-zinc-200">
                 Aforo máximo del evento
                 <input
                   required
@@ -488,7 +494,7 @@ export default function OrganizerPage() {
                   className="field"
                 />
               </label>
-              <label className="text-sm">
+              <label className="text-sm font-medium text-zinc-200">
                 Estado
                 <select
                   value={eventForm.status}
@@ -498,7 +504,7 @@ export default function OrganizerPage() {
                       status: e.target.value as Event["status"],
                     })
                   }
-                  className="field">
+                  className="field select-field">
                   <option value="draft">Borrador</option>
                   <option value="published">Publicado</option>
                 </select>
@@ -519,7 +525,7 @@ export default function OrganizerPage() {
               )}
             </div>
           </form>
-          <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <section className="rounded-3xl border border-white/10 bg-white/[0.055] p-6 sm:p-8">
             <h2 className="text-xl font-bold">Nuevos tipos de entrada</h2>
             {!events.length ? (
               <p className="mt-4 text-zinc-400">
@@ -527,7 +533,7 @@ export default function OrganizerPage() {
               </p>
             ) : (
               <>
-                <label className="mt-4 block text-sm">
+                <label className="mt-5 block text-sm font-medium text-zinc-200">
                   Evento
                   <select
                     value={selectedEventId ?? ""}
@@ -537,7 +543,7 @@ export default function OrganizerPage() {
                       );
                       if (selected) selectEventForTickets(selected);
                     }}
-                    className="field">
+                    className="field select-field">
                     <option value="">Selecciona un evento</option>
                     {events.map((event) => (
                       <option key={event.id} value={event.id}>
@@ -552,7 +558,7 @@ export default function OrganizerPage() {
                   </p>
                 ) : (
                   <>
-                <div className="mt-3 rounded-xl bg-violet-500/10 px-4 py-3 text-sm text-violet-100">
+                <div className="mt-5 rounded-xl bg-violet-500/10 px-4 py-3 text-sm text-violet-300">
                   <span className="font-semibold">
                     {assignedCapacity} / {selectedEvent.maxCapacity}
                   </span>{" "}
@@ -561,8 +567,8 @@ export default function OrganizerPage() {
                 </div>
                 <form
                   onSubmit={saveTicket}
-                  className="mt-5 grid gap-3 sm:grid-cols-[1fr_9rem_auto]">
-                  <label className="text-sm">
+                  className="mt-5 grid gap-5 sm:grid-cols-[1fr_9rem_auto]">
+                  <label className="text-sm font-medium text-zinc-200">
                     Nueva entrada
                     <input
                       required
@@ -574,7 +580,7 @@ export default function OrganizerPage() {
                       className="field"
                     />
                   </label>
-                  <label className="text-sm">
+                  <label className="text-sm font-medium text-zinc-200">
                     Capacidad
                     <input
                       required
@@ -663,7 +669,7 @@ export default function OrganizerPage() {
             )}
           </section>
         </section>
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <section className="rounded-3xl border border-white/10 bg-white/[0.055] p-6 sm:p-8">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-bold">Mis eventos</h2>
@@ -763,9 +769,10 @@ export default function OrganizerPage() {
               ))}
             </div>
           ) : (
-            <p className="mt-5 rounded-xl border border-dashed border-white/15 px-4 py-8 text-center text-sm text-zinc-400">
-              No hay eventos todavía disponibles.
-            </p>
+            <div className="event-detail-card mt-5 text-center">
+              <h3 className="text-xl font-bold text-white">Aún no hay eventos creados</h3>
+              <p className="mt-2 text-zinc-400">Crea tu primer evento para comenzar a configurar sus entradas.</p>
+            </div>
           )}
         </section>
       </div>

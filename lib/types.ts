@@ -17,6 +17,25 @@ export type TicketType = {
   maxCapacity: number;
 };
 
+export type OrganizerRegistration = {
+  id: string;
+  eventId: string;
+  ticketTypeId: string;
+  attendeeName: string;
+  email: string;
+  createdAt: string;
+};
+
+export type DailyRegistrationCount = {
+  date: string;
+  registrations: number;
+};
+
+export type DailyRegistrationsResponse = {
+  publishedAt: string | null;
+  days: DailyRegistrationCount[];
+};
+
 export type PublicEvent = {
   id: string;
   title: string;

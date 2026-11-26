@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 
-export function createSupabaseServerClient() {
+export function createSupabaseServerClient(accessToken?: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -18,5 +18,8 @@ export function createSupabaseServerClient() {
       detectSessionInUrl: false,
       persistSession: false,
     },
+    ...(accessToken
+      ? { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
+      : {}),
   });
 }

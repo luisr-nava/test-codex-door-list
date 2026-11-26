@@ -5,6 +5,7 @@
 - `public.events`: evento perteneciente a `auth.users` mediante `owner_id`; incluye `title`, `description`, `starts_at`, `venue`, `max_capacity`, `status`, timestamps y UUID.
 - `public.ticket_types`: tipos de entrada pertenecientes a `events` mediante `event_id` con borrado en cascada; nombre único por evento, capacidad positiva y timestamps.
 - `public.registrations`: registro de asistente perteneciente a `events` y a `ticket_types`. La FK compuesta `(ticket_type_id, event_id)` garantiza que la entrada corresponda al evento; al borrar el evento, sus registros se eliminan en cascada.
+- `public.events.published_at`: fecha de la última publicación del evento, utilizada como inicio de la serie diaria del panel.
 - `public.tickets`: entradas emitidas para un único registro mediante `registration_id` único. Contiene un código único de 64 caracteres hexadecimales, estado `valid`, `used` o `revoke` y timestamp de emisión.
 
 El enum `public.event_status` contiene `draft` y `published`. Hay índices para propietarios de eventos, eventos publicados por fecha, tipos por evento, registros por evento y registros por tipo.
@@ -41,4 +42,5 @@ RLS está habilitado en `events`, `ticket_types` y `registrations`.
 - `20261125000003_create_public_registrations.sql`: crea registros, unicidad por email/evento, FK compuesta, protección de capacidad, RLS y las RPC públicas de lectura y alta.
 - `20261126000004_create_tickets.sql`: crea las entradas emitidas, sus estados, la emisión atómica durante el registro y su consulta pública mediante código secreto.
 - `20261126000005_rename_ticket_tables.sql`: aplicada; renombra `tickets_types` a `ticket_types` y `ticket` a `tickets`, y centraliza la regla de registro abierto.
+- `20261126000007_add_event_published_at.sql`: añade la fecha de publicación y la conserva al publicar un evento.
 - `20261126000006_fix_ticket_type_capacity_trigger.sql`: aplicada; actualiza la función del trigger de capacidad para consultar `ticket_types`.

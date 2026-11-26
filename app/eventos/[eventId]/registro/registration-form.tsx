@@ -39,7 +39,7 @@ export function RegistrationForm({
   }, [ticketTypeId, ticketTypes]);
 
   async function refreshTicketTypes() {
-    const response = await fetch(`/api/eventos/${eventId}/registro`);
+    const response = await fetch(`/api/events/${eventId}/register`);
     if (!response.ok) return;
     const registration = await response.json() as PublicEventRegistration;
     setState((current) => ({ ...current, ticketTypes: registration.ticketTypes }));
@@ -62,7 +62,7 @@ export function RegistrationForm({
 
     setPending(true);
     try {
-      const response = await fetch(`/api/eventos/${eventId}/registro`, {
+      const response = await fetch(`/api/events/${eventId}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
