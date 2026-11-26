@@ -45,30 +45,34 @@ function EventsLoadError() {
 function EventCard({ event }: { event: PublicEventSummary }) {
   const hasAvailabilitySummary = typeof event.availableTicketTypes === "number";
   const hasAvailableTickets = (event.availableTicketTypes ?? 0) > 0;
+  const hasRemainingCapacity = typeof event.remainingCapacity === "number";
+  const remainingCapacityLabel = event.remainingCapacity === 1 ? "lugar" : "lugares";
   const availableTicketLabel = hasAvailableTickets
-    ? `${event.availableTicketTypes} ${event.availableTicketTypes === 1 ? "tipo de entrada disponible" : "tipos de entrada disponibles"}${event.remainingCapacity ? ` · ${event.remainingCapacity} lugares` : ""}`
+    ? `${event.availableTicketTypes} ${event.availableTicketTypes === 1 ? "tipo de entrada disponible" : "tipos de entrada disponibles"}${hasRemainingCapacity ? ` · ${event.remainingCapacity} ${remainingCapacityLabel}` : ""}`
     : "Sin entradas disponibles en este momento";
 
   return (
-    <article className="flex min-w-0 flex-col rounded-3xl border border-white/10 bg-white/[0.055] p-6 sm:p-7">
+    <article className="flex min-w-0 flex-col rounded-2xl border border-white/10 bg-white/[0.055] p-6 sm:p-8">
       <div>
-        <p className="text-sm font-semibold text-emerald-300">Registro abierto</p>
+        <p className="inline-flex rounded-full border border-emerald-300/20 bg-emerald-300/[0.07] px-3 py-1 text-sm font-semibold text-emerald-300">
+          Registro abierto
+        </p>
         <h2 className="mt-3 break-words text-2xl font-bold tracking-[-0.02em] text-white">{event.title}</h2>
         <p className="mt-4 line-clamp-3 break-words leading-7 text-zinc-300">{event.description}</p>
       </div>
 
-      <dl className="mt-7 grid gap-3 sm:grid-cols-2">
-        <div className="event-detail-card min-w-0">
-          <dt className="text-sm text-zinc-400">Fecha y hora</dt>
+      <dl className="mt-7 grid gap-5 border-y border-white/10 py-5 sm:grid-cols-2 sm:gap-8">
+        <div className="min-w-0 sm:border-r sm:border-white/10 sm:pr-8">
+          <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Fecha y hora</dt>
           <dd className="mt-2 font-semibold leading-6 text-zinc-100">{formatEventDateTime(event.startsAt)}</dd>
         </div>
-        <div className="event-detail-card min-w-0">
-          <dt className="text-sm text-zinc-400">Lugar</dt>
+        <div className="min-w-0">
+          <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Lugar</dt>
           <dd className="mt-2 break-words font-semibold leading-6 text-zinc-100">{event.venue}</dd>
         </div>
       </dl>
 
-      <div className="mt-6 border-t border-white/10 pt-5">
+      <div className="mt-6">
         {hasAvailabilitySummary && (
           <p className={hasAvailableTickets ? "text-sm font-medium leading-6 text-emerald-300" : "text-sm leading-6 text-amber-300"}>
             {availableTicketLabel}
@@ -79,7 +83,7 @@ function EventCard({ event }: { event: PublicEventSummary }) {
             <p className="mt-2 text-sm leading-6 text-zinc-400">
               En el siguiente paso elegís tu entrada y completás tus datos.
             </p>
-            <Link href={`/eventos/${event.id}/registro`} className="primary-button mt-5 inline-block">
+            <Link href={`/eventos/${event.id}/registro`} className="primary-button mt-5 inline-flex min-h-11 w-full items-center justify-center sm:w-auto">
               Ver opciones de entrada
             </Link>
           </>
@@ -116,7 +120,7 @@ export default function Home() {
   return (
     <main className="registration-page min-h-screen px-5 py-8 sm:px-8 sm:py-12">
       <div className="mx-auto max-w-6xl">
-        <header className="flex items-center justify-between gap-4">
+        <header className="flex items-center justify-between gap-4 border-b border-white/10 pb-6">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-violet-300">Door List</p>
             <p className="mt-1 text-sm text-zinc-400">Eventos con registro abierto</p>

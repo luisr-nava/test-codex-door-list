@@ -15,6 +15,33 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+::selection {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+html {
+  scrollbar-color: rgb(255 255 255 / 0.2) #09090b;
+}
+
+::-webkit-scrollbar {
+  width: 0.75rem;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid #09090b;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.32);
+}
+
 .field {
   display: block;
   width: 100%;
