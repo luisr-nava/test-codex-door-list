@@ -1,18 +1,11 @@
 import { notFound } from "next/navigation";
+import { formatEventDateTime } from "@/lib/date-time";
 import { getPublicEventRegistration } from "@/lib/registrations/data";
 import { RegistrationForm } from "./registration-form";
 
 export const dynamic = "force-dynamic";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function formatEventDateTime(value: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: "America/Argentina/Buenos_Aires",
-  }).format(new Date(value));
-}
 
 export default async function PublicRegistrationPage({
   params,

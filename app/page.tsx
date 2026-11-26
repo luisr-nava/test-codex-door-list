@@ -1,15 +1,8 @@
 import Link from "next/link";
+import { formatEventDateTime } from "@/lib/date-time";
 import { getPublicEvents } from "@/lib/registrations/data";
 
 export const dynamic = "force-dynamic";
-
-function formatEventDateTime(value: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: "America/Argentina/Buenos_Aires",
-  }).format(new Date(value));
-}
 
 export default async function Home() {
   const events = await getPublicEvents();

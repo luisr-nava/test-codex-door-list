@@ -3,44 +3,24 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
+import { formatEventDateTime, toLocalDateTime } from "@/lib/date-time";
 import { createSupabaseClient } from "@/lib/supabase/client";
-
-type Event = {
-  id: string;
-  title: string;
-  description: string;
-  starts_at: string;
-  venue: string;
-  max_capacity: number;
-  status: "draft" | "published";
-};
-
-type TicketType = {
-  id: string;
-  event_id: string;
-  name: string;
-  max_capacity: number;
-};
+import {
+  mapEvent,
+  mapTicketType,
+  toEventRecord,
+  toTicketTypeRecord,
+} from "@/lib/supabase/mappers";
+import type { Event, TicketType } from "@/lib/types";
 
 const emptyEvent = {
   title: "",
   description: "",
-  starts_at: "",
+  startsAt: "",
   venue: "",
-  max_capacity: "",
+  maxCapacity: "",
   status: "draft" as Event["status"],
 };
-
-function toLocalDateTime(value: string) {
-  return value ? new Date(value).toISOString().slice(0, 16) : "";
-}
-function formatEventDateTime(value: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "America/Argentina/Buenos_Aires",
-  }).format(new Date(value));
-}
 
 function readableError(error: { message: string } | null) {
   if (!error) return "Ocurrió un error inesperado.";
@@ -61,7 +41,7 @@ export default function OrganizerPage() {
   const [ticketForm, setTicketForm] = useState({
     id: "",
     name: "",
-    max_capacity: "",
+    maxCapacity: "",
   });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,18 +56,18 @@ export default function OrganizerPage() {
   const editingEvent =
     events.find((event) => event.id === editingEventId) ?? null;
   const selectedTickets = useMemo(
-    () => tickets.filter((ticket) => ticket.event_id === selectedEventId),
+    () => tickets.filter((ticket) => ticket.eventId === selectedEventId),
     [tickets, selectedEventId],
   );
   const assignedCapacity = selectedTickets.reduce(
-    (sum, ticket) => sum + ticket.max_capacity,
+    (sum, ticket) => sum + ticket.maxCapacity,
     0,
   );
   const assignedCapacityByEvent = useMemo(() => {
     return tickets.reduce((capacities, ticket) => {
       capacities.set(
-        ticket.event_id,
-        (capacities.get(ticket.event_id) ?? 0) + ticket.max_capacity,
+        ticket.eventId,
+        (capacities.get(ticket.eventId) ?? 0) + ticket.maxCapacity,
       );
       return capacities;
     }, new Map<string, number>());
@@ -121,8 +101,8 @@ export default function OrganizerPage() {
       setMessage(readableError(ticketsError));
       return;
     }
-    setEvents((eventsData ?? []) as Event[]);
-    setTickets((ticketsData ?? []) as TicketType[]);
+    setEvents((eventsData ?? []).map(mapEvent));
+    setTickets((ticketsData ?? []).map(mapTicketType));
   }
 
   useEffect(() => {
@@ -150,7 +130,7 @@ export default function OrganizerPage() {
 
   function selectEventForTickets(event: Event) {
     setSelectedEventId(event.id);
-    setTicketForm({ id: "", name: "", max_capacity: "" });
+    setTicketForm({ id: "", name: "", maxCapacity: "" });
     setTicketMessage("");
   }
 
@@ -159,9 +139,9 @@ export default function OrganizerPage() {
     setEventForm({
       title: event.title,
       description: event.description,
-      starts_at: toLocalDateTime(event.starts_at),
+      startsAt: toLocalDateTime(event.startsAt),
       venue: event.venue,
-      max_capacity: String(event.max_capacity),
+      maxCapacity: String(event.maxCapacity),
       status: event.status,
     });
     setMessage("");
@@ -207,19 +187,27 @@ export default function OrganizerPage() {
     event.preventDefault();
     setSaving(true);
     setMessage("");
-    const payload = {
+    const payload = toEventRecord({
       title: eventForm.title.trim(),
       description: eventForm.description.trim(),
-      starts_at: new Date(eventForm.starts_at).toISOString(),
+      startsAt: new Date(eventForm.startsAt).toISOString(),
       venue: eventForm.venue.trim(),
-      max_capacity: Number(eventForm.max_capacity),
+      maxCapacity: Number(eventForm.maxCapacity),
       status: eventForm.status,
-    };
+    });
     const result = editingEvent
       ? await supabase.from("events").update(payload).eq("id", editingEvent.id)
       : await supabase
           .from("events")
-          .insert({ ...payload, owner_id: session?.user.id });
+          .insert(toEventRecord({
+            title: eventForm.title.trim(),
+            description: eventForm.description.trim(),
+            startsAt: new Date(eventForm.startsAt).toISOString(),
+            venue: eventForm.venue.trim(),
+            maxCapacity: Number(eventForm.maxCapacity),
+            status: eventForm.status,
+            ownerId: session?.user.id,
+          }));
     setSaving(false);
     if (result.error) {
       setMessage(readableError(result.error));
@@ -253,13 +241,13 @@ export default function OrganizerPage() {
     event.preventDefault();
     if (!selectedEvent) return;
     setTicketMessage("");
-    const requestedCapacity = Number(ticketForm.max_capacity);
+    const requestedCapacity = Number(ticketForm.maxCapacity);
     const previousCapacity =
       selectedTickets.find((ticket) => ticket.id === ticketForm.id)
-        ?.max_capacity ?? 0;
+        ?.maxCapacity ?? 0;
     if (
       assignedCapacity - previousCapacity + requestedCapacity >
-      selectedEvent.max_capacity
+      selectedEvent.maxCapacity
     ) {
       setTicketMessage(
         "El aforo total de los tipos de entrada no puede superar el límite del evento.",
@@ -270,20 +258,21 @@ export default function OrganizerPage() {
     const { error } = ticketForm.id
       ? await supabase
           .from("ticket_types")
-          .update({
+          .update(toTicketTypeRecord({
+            eventId: selectedEvent.id,
             name: ticketForm.name.trim(),
-            max_capacity: requestedCapacity,
-          })
+            maxCapacity: requestedCapacity,
+          }))
           .eq("id", ticketForm.id)
-      : await supabase.from("ticket_types").insert({
-          event_id: selectedEvent.id,
+      : await supabase.from("ticket_types").insert(toTicketTypeRecord({
+          eventId: selectedEvent.id,
           name: ticketForm.name.trim(),
-          max_capacity: requestedCapacity,
-        });
+          maxCapacity: requestedCapacity,
+        }));
     setSaving(false);
     if (error) setTicketMessage(readableError(error));
     else {
-      setTicketForm({ id: "", name: "", max_capacity: "" });
+      setTicketForm({ id: "", name: "", maxCapacity: "" });
       await loadOrganizerData();
     }
   }
@@ -444,9 +433,9 @@ export default function OrganizerPage() {
                 <input
                   required
                   type="datetime-local"
-                  value={eventForm.starts_at}
+                  value={eventForm.startsAt}
                   onChange={(e) =>
-                    setEventForm({ ...eventForm, starts_at: e.target.value })
+                    setEventForm({ ...eventForm, startsAt: e.target.value })
                   }
                   className="field"
                 />
@@ -470,9 +459,9 @@ export default function OrganizerPage() {
                   required
                   min="1"
                   type="number"
-                  value={eventForm.max_capacity}
+                  value={eventForm.maxCapacity}
                   onChange={(e) =>
-                    setEventForm({ ...eventForm, max_capacity: e.target.value })
+                    setEventForm({ ...eventForm, maxCapacity: e.target.value })
                   }
                   className="field"
                 />
@@ -519,10 +508,10 @@ export default function OrganizerPage() {
               <>
                 <div className="mt-3 rounded-xl bg-violet-500/10 px-4 py-3 text-sm text-violet-100">
                   <span className="font-semibold">
-                    {assignedCapacity} / {selectedEvent.max_capacity}
+                    {assignedCapacity} / {selectedEvent.maxCapacity}
                   </span>{" "}
                   plazas asignadas ·{" "}
-                  {selectedEvent.max_capacity - assignedCapacity} disponibles
+                  {selectedEvent.maxCapacity - assignedCapacity} disponibles
                 </div>
                 <form
                   onSubmit={saveTicket}
@@ -546,11 +535,11 @@ export default function OrganizerPage() {
                       min="1"
                       type="number"
                       placeholder="0"
-                      value={ticketForm.max_capacity}
+                      value={ticketForm.maxCapacity}
                       onChange={(e) =>
                         setTicketForm({
                           ...ticketForm,
-                          max_capacity: e.target.value,
+                          maxCapacity: e.target.value,
                         })
                       }
                       className="field"
@@ -566,7 +555,7 @@ export default function OrganizerPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          setTicketForm({ id: "", name: "", max_capacity: "" })
+                          setTicketForm({ id: "", name: "", maxCapacity: "" })
                         }
                         className="secondary-button">
                         Cancelar
@@ -589,7 +578,7 @@ export default function OrganizerPage() {
                       <div>
                         <p className="font-medium">{ticket.name}</p>
                         <p className="text-sm text-zinc-400">
-                          {ticket.max_capacity} plazas
+                          {ticket.maxCapacity} plazas
                         </p>
                       </div>
                       <div className="flex gap-3">
@@ -600,7 +589,7 @@ export default function OrganizerPage() {
                             setTicketForm({
                               id: ticket.id,
                               name: ticket.name,
-                              max_capacity: String(ticket.max_capacity),
+                              maxCapacity: String(ticket.maxCapacity),
                             })
                           }
                           className="text-sm text-violet-300 hover:text-violet-200">
@@ -658,7 +647,7 @@ export default function OrganizerPage() {
                     <div>
                       <dt className="text-xs text-zinc-500">Fecha y hora</dt>
                       <dd className="mt-1 font-medium text-zinc-200">
-                        {formatEventDateTime(event.starts_at)}
+                        {formatEventDateTime(event.startsAt, "medium")}
                       </dd>
                     </div>
                     <div>
@@ -673,7 +662,7 @@ export default function OrganizerPage() {
                       <div>
                         <dt className="text-xs text-zinc-500">Aforo máximo</dt>
                         <dd className="mt-1 font-medium text-zinc-200">
-                          {event.max_capacity}
+                          {event.maxCapacity}
                         </dd>
                       </div>
                       <div>

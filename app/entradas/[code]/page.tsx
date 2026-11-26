@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
+import { formatEventDateTime } from "@/lib/date-time";
 import { getPublicTicket } from "@/lib/registrations/data";
 
 export const dynamic = "force-dynamic";
@@ -23,14 +24,6 @@ const statusContent = {
     className: "border-rose-300/20 bg-rose-300/[0.07] text-rose-200",
   },
 } as const;
-
-function formatEventDateTime(value: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: "America/Argentina/Buenos_Aires",
-  }).format(new Date(value));
-}
 
 export default async function PublicTicketPage({
   params,

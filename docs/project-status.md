@@ -13,6 +13,7 @@
 - Emisión atómica de una entrada por registro, con código secreto, estado y página pública con QR.
 - Email de confirmación mediante Resend, con los datos del evento y el QR embebido.
 - Políticas RLS y funciones SQL para separar operaciones del organizador y del público.
+- Tipos, formatos de fecha y conversiones entre dominio y persistencia centralizados en `lib/`.
 
 ## Estado actual
 

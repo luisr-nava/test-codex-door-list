@@ -6,7 +6,7 @@ import type {
   PublicEventRegistration,
   PublicTicket,
   RegistrationResultCode,
-} from "@/lib/registrations/types";
+} from "@/lib/types";
 
 type RegistrationRpcResult = {
   ok: boolean;

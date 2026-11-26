@@ -21,7 +21,9 @@
 - `app/entradas/[code]/page.tsx`: página pública de una entrada emitida; consulta por código secreto y renderiza sus datos, estado y QR.
 - `lib/supabase/client.ts`: cliente Supabase para componentes cliente, usando variables públicas de entorno.
 - `lib/supabase/server.ts`: cliente Supabase sin persistencia de sesión para código servidor.
-- `lib/registrations/types.ts`: tipos del flujo público de registro y sus códigos de resultado.
+- `lib/types.ts`: tipos de dominio y contratos compartidos entre UI, API y correo.
+- `lib/date-time.ts`: formateo compartido de fechas de eventos en Buenos Aires.
+- `lib/supabase/mappers.ts`: traducción entre modelos de dominio en `camelCase` y filas o payloads de persistencia en `snake_case`.
 - `lib/registrations/data.ts`: acceso servidor a las RPC públicas y validación básica de la respuesta.
 - `lib/tickets/email.ts`: genera el QR PNG e invoca la API de Resend para enviar la entrada por correo con la imagen embebida.
 - `supabase/migrations/`: evolución del esquema, restricciones, funciones y políticas RLS.

@@ -5,7 +5,7 @@ import {
   getPublicEventRegistration,
   getPublicTicket,
 } from "@/lib/registrations/data";
-import type { RegistrationFormState } from "@/lib/registrations/types";
+import type { RegistrationFormState } from "@/lib/types";
 import { sendTicketEmail } from "@/lib/tickets/email";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

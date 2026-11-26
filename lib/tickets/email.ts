@@ -2,7 +2,8 @@ import "server-only";
 
 import QRCode from "qrcode";
 
-import type { PublicTicket } from "@/lib/registrations/types";
+import { formatEventDateTime } from "@/lib/date-time";
+import type { PublicTicket } from "@/lib/types";
 
 const resendEndpoint = "https://api.resend.com/emails";
 
@@ -13,14 +14,6 @@ function escapeHtml(value: string) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-function formatEventDate(startsAt: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: "America/Argentina/Buenos_Aires",
-  }).format(new Date(startsAt));
 }
 
 export async function sendTicketEmail(ticket: PublicTicket) {
@@ -38,7 +31,7 @@ export async function sendTicketEmail(ticket: PublicTicket) {
     type: "png",
     color: { dark: "#18181b", light: "#ffffff" },
   });
-  const eventDate = formatEventDate(ticket.event.startsAt);
+  const eventDate = formatEventDateTime(ticket.event.startsAt);
   const eventName = escapeHtml(ticket.event.title);
   const venue = escapeHtml(ticket.event.venue);
   const attendeeName = escapeHtml(ticket.attendee.name);

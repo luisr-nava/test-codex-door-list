@@ -1,7 +1,20 @@
-export type PublicTicketType = {
+export type EventStatus = "draft" | "published";
+
+export type Event = {
   id: string;
+  title: string;
+  description: string;
+  startsAt: string;
+  venue: string;
+  maxCapacity: number;
+  status: EventStatus;
+};
+
+export type TicketType = {
+  id: string;
+  eventId: string;
   name: string;
-  remainingCapacity: number;
+  maxCapacity: number;
 };
 
 export type PublicEvent = {
@@ -12,14 +25,14 @@ export type PublicEvent = {
   venue: string;
 };
 
+export type PublicTicketType = {
+  id: string;
+  name: string;
+  remainingCapacity: number;
+};
+
 export type PublicEventRegistration = {
-  event: {
-    id: string;
-    title: string;
-    description: string;
-    startsAt: string;
-    venue: string;
-  };
+  event: PublicEvent;
   ticketTypes: PublicTicketType[];
 };
 
@@ -34,18 +47,9 @@ export type PublicTicket = {
   code: string;
   status: "valid" | "used" | "revoke";
   createdAt: string;
-  attendee: {
-    name: string;
-    email: string;
-  };
-  event: {
-    title: string;
-    startsAt: string;
-    venue: string;
-  };
-  ticketType: {
-    name: string;
-  };
+  attendee: { name: string; email: string };
+  event: { title: string; startsAt: string; venue: string };
+  ticketType: { name: string };
 };
 
 export type RegistrationFormState = {
@@ -54,10 +58,6 @@ export type RegistrationFormState = {
   message?: string;
   ticketCode?: string;
   emailStatus?: "sent" | "failed";
-  fieldErrors?: {
-    name?: string;
-    email?: string;
-    ticketTypeId?: string;
-  };
+  fieldErrors?: { name?: string; email?: string; ticketTypeId?: string };
   ticketTypes?: PublicTicketType[];
 };

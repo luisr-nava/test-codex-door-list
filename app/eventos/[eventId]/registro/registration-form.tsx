@@ -3,10 +3,7 @@
 import { useActionState, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { registerForEvent } from "./actions";
-import type {
-  PublicTicketType,
-  RegistrationFormState,
-} from "@/lib/registrations/types";
+import type { PublicTicketType, RegistrationFormState } from "@/lib/types";
 
 type RegistrationFormProps = {
   eventId: string;
