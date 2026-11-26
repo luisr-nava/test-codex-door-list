@@ -91,3 +91,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - No leas toda la documentación en cada tarea; consulta únicamente los documentos relevantes.
 - Actualiza los documentos de `docs/` correspondientes cuando se produzcan cambios relevantes en sus respectivos ámbitos.
 - No documentes funcionalidades inexistentes ni inventes reglas de negocio.
+
+
+- Utiliza el skill local `.agents/skills/door-list-ui/SKILL.md` cuando crees o modifiques interfaces, componentes visuales, formularios, tablas o pantallas; consulta su contrato visual únicamente cuando sea relevante.
