@@ -26,3 +26,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 /.codex/config.toml
+
+# end-to-end test artifacts
+/playwright-report/
+/test-results/

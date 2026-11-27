@@ -5,7 +5,9 @@ import QRCode from "qrcode";
 import { formatEventDateTime } from "@/lib/date-time";
 import type { PublicTicket } from "@/lib/types";
 
-const resendEndpoint = "https://api.resend.com/emails";
+const resendEndpoint = process.env.NODE_ENV === "production"
+  ? "https://api.resend.com/emails"
+  : process.env.E2E_RESEND_API_URL ?? "https://api.resend.com/emails";
 
 function escapeHtml(value: string) {
   return value
