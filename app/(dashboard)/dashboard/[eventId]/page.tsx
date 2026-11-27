@@ -26,6 +26,8 @@ export default function EventDashboardPage() {
     days: [],
   });
   const [dailyRegistrationsState, setDailyRegistrationsState] = useState<"loading" | "error" | "ready">("loading");
+  const [sendingTicketCode, setSendingTicketCode] = useState<string | null>(null);
+  const [resendResult, setResendResult] = useState<{ ticketCode: string; status: "sent" | "error" } | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseClient();
@@ -143,6 +145,31 @@ export default function EventDashboardPage() {
     [attendees],
   );
 
+  async function resendTicket(ticketCode: string) {
+    setSendingTicketCode(ticketCode);
+    setResendResult(null);
+    try {
+      const { data: { session } } = await createSupabaseClient().auth.getSession();
+      if (!session) {
+        setResendResult({ ticketCode, status: "error" });
+        return;
+      }
+      const response = await fetch(`/api/events/${eventId}/resend-ticket`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ticketCode }),
+      });
+      setResendResult({ ticketCode, status: response.ok ? "sent" : "error" });
+    } catch {
+      setResendResult({ ticketCode, status: "error" });
+    } finally {
+      setSendingTicketCode(null);
+    }
+  }
+
   return (
     <main className="registration-page min-h-screen px-5 py-10 sm:px-8">
       <div className="mx-auto max-w-6xl">
@@ -181,9 +208,9 @@ export default function EventDashboardPage() {
             <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-2xl font-bold">Asistentes registrados</h2><p className="mt-1 text-sm text-zinc-400">{attendees.filter((attendee) => attendee.ticketStatus === "used").length} ingresaron · Se actualiza automáticamente.</p></div>{hasAttendees && <AttendeesCsvButton attendees={attendees} eventTitle={event.title} />}</div>
             <div className="event-detail-card mt-4 overflow-x-auto p-0">
               <table className="w-full min-w-[48rem] text-left text-sm">
-                <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-zinc-500"><tr><th className="px-5 py-4">Asistente</th><th className="px-5 py-4">Email</th><th className="px-5 py-4">Entrada</th><th className="px-5 py-4">Ingreso</th><th className="px-5 py-4">Compra</th></tr></thead>
+                <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-zinc-500"><tr><th className="px-5 py-4">Asistente</th><th className="px-5 py-4">Email</th><th className="px-5 py-4">Entrada</th><th className="px-5 py-4">Ingreso</th><th className="px-5 py-4">Compra</th><th className="px-5 py-4">Acción</th></tr></thead>
                 <tbody>
-                  {hasAttendees ? attendees.map((attendee) => <tr key={attendee.ticketCode} className="border-b border-white/10 last:border-0"><td className="px-5 py-4 font-medium">{attendee.attendeeName}</td><td className="px-5 py-4 text-zinc-300">{attendee.email}</td><td className="px-5 py-4 text-zinc-300">{attendee.ticketTypeName}</td><td className={`px-5 py-4 font-semibold ${attendee.ticketStatus === "used" ? "text-emerald-300" : "text-zinc-400"}`}>{attendee.ticketStatus === "used" ? "Ingresó" : "Pendiente"}</td><td className="px-5 py-4 text-zinc-400">{formatEventDateTime(attendee.purchasedAt, "medium")}</td></tr>) : <tr><td className="px-5 py-8 text-center text-zinc-400" colSpan={5}>Los asistentes registrados aparecerán aquí.</td></tr>}
+                  {hasAttendees ? attendees.map((attendee) => <tr key={attendee.ticketCode} className="border-b border-white/10 last:border-0"><td className="px-5 py-4 font-medium">{attendee.attendeeName}</td><td className="px-5 py-4 text-zinc-300">{attendee.email}</td><td className="px-5 py-4 text-zinc-300">{attendee.ticketTypeName}</td><td className={`px-5 py-4 font-semibold ${attendee.ticketStatus === "used" ? "text-emerald-300" : "text-zinc-400"}`}>{attendee.ticketStatus === "used" ? "Ingresó" : "Pendiente"}</td><td className="px-5 py-4 text-zinc-400">{formatEventDateTime(attendee.purchasedAt, "medium")}</td><td className="px-5 py-4"><button type="button" className="secondary-button whitespace-nowrap" disabled={sendingTicketCode !== null} onClick={() => { void resendTicket(attendee.ticketCode); }} aria-label={`Reenviar entrada a ${attendee.attendeeName} por email`}>{sendingTicketCode === attendee.ticketCode ? "Reenviando…" : "Reenviar entrada"}</button>{resendResult?.ticketCode === attendee.ticketCode && <p role="status" aria-live="polite" className={`mt-2 text-sm ${resendResult.status === "sent" ? "text-emerald-300" : "text-red-200"}`}>{resendResult.status === "sent" ? "Entrada enviada por email." : "No pudimos enviar la entrada. Intentá nuevamente."}</p>}</td></tr>) : <tr><td className="px-5 py-8 text-center text-zinc-400" colSpan={6}>Los asistentes registrados aparecerán aquí.</td></tr>}
                 </tbody>
               </table>
             </div>
