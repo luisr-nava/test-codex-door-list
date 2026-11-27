@@ -10,6 +10,14 @@ type ScanResult = CheckInResponse | { status: "notFound" };
 type ViewState = "loading" | "ready" | "unauthenticated" | "error";
 type CameraState = "idle" | "starting" | "scanning" | "unavailable";
 type EventOption = { id: string; title: string };
+type EmailSearchState = "idle" | "loading" | "error" | "notFound" | "found";
+type EmailSearchResult = {
+  attendeeName: string;
+  email: string;
+  ticketTypeName: string;
+  ticketCode: string;
+  ticketStatus: "valid" | "used" | "revoke";
+};
 
 export function ScanStation() {
   const [viewState, setViewState] = useState<ViewState>("loading");
@@ -18,12 +26,16 @@ export function ScanStation() {
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [cameraMessage, setCameraMessage] = useState("");
   const [manualCode, setManualCode] = useState("");
+  const [searchEmail, setSearchEmail] = useState("");
+  const [emailSearchState, setEmailSearchState] = useState<EmailSearchState>("idle");
+  const [emailSearchResult, setEmailSearchResult] = useState<EmailSearchResult | null>(null);
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const resultRef = useRef<HTMLElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
   const busyRef = useRef(false);
+  const searchSequenceRef = useRef(0);
 
   useEffect(() => {
     const supabase = createSupabaseClient();
@@ -57,8 +69,13 @@ export function ScanStation() {
     setCameraState("idle");
   }
 
-  async function checkIn(rawCode: string) {
+  async function checkIn(rawCode: string, source: "scan" | "email" = "scan") {
     if (busyRef.current || !eventId) return;
+    if (source === "scan") {
+      searchSequenceRef.current += 1;
+      setEmailSearchState("idle");
+      setEmailSearchResult(null);
+    }
     busyRef.current = true;
     setPending(true);
     setResult(null);
@@ -79,6 +96,9 @@ export function ScanStation() {
         const data: CheckInResponse = await response.json();
         if (data.status !== "valid" && data.status !== "used") throw new Error("Invalid result");
         setResult(data);
+        if (source === "email") {
+          setEmailSearchResult((current) => current ? { ...current, ticketStatus: "used" } : null);
+        }
       } else if (response.status === 404) {
         setResult({ status: "notFound" });
       } else if (response.status === 401) {
@@ -94,8 +114,58 @@ export function ScanStation() {
     }
   }
 
+  async function searchByEmail() {
+    if (!eventId || busyRef.current) return;
+    const email = searchEmail.trim().toLowerCase();
+    if (email.length < 3 || email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailSearchState("error");
+      setEmailSearchResult(null);
+      return;
+    }
+
+    const sequence = ++searchSequenceRef.current;
+    stopCamera();
+    setResult(null);
+    setEmailSearchResult(null);
+    setEmailSearchState("loading");
+    try {
+      const supabase = createSupabaseClient();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (sequence !== searchSequenceRef.current) return;
+      if (userError || !user) { setViewState("unauthenticated"); return; }
+      const { data: registration, error: registrationError } = await supabase.from("registrations")
+        .select("id, attendee_name, email, ticket_type_id")
+        .eq("event_id", eventId).eq("email", email).maybeSingle();
+      if (sequence !== searchSequenceRef.current) return;
+      if (registrationError) throw registrationError;
+      if (!registration) { setEmailSearchState("notFound"); return; }
+
+      const [ticketResponse, ticketTypeResponse] = await Promise.all([
+        supabase.from("tickets").select("code, status").eq("registration_id", registration.id).maybeSingle(),
+        supabase.from("ticket_types").select("name").eq("id", registration.ticket_type_id).eq("event_id", eventId).maybeSingle(),
+      ]);
+      if (sequence !== searchSequenceRef.current) return;
+      if (ticketResponse.error || ticketTypeResponse.error || !ticketResponse.data || !ticketTypeResponse.data) {
+        throw ticketResponse.error ?? ticketTypeResponse.error ?? new Error("Missing ticket");
+      }
+      setEmailSearchResult({
+        attendeeName: registration.attendee_name,
+        email: registration.email,
+        ticketTypeName: ticketTypeResponse.data.name,
+        ticketCode: ticketResponse.data.code,
+        ticketStatus: ticketResponse.data.status,
+      });
+      setEmailSearchState("found");
+    } catch {
+      if (sequence === searchSequenceRef.current) setEmailSearchState("error");
+    }
+  }
+
   async function startCamera() {
     if (!eventId || !videoRef.current || busyRef.current) return;
+    searchSequenceRef.current += 1;
+    setEmailSearchState("idle");
+    setEmailSearchResult(null);
     setResult(null);
     setCameraMessage("");
     setCameraState("starting");
@@ -116,8 +186,11 @@ export function ScanStation() {
   }
 
   function changeEvent(value: string) {
+    searchSequenceRef.current += 1;
     stopCamera();
     setResult(null);
+    setEmailSearchState("idle");
+    setEmailSearchResult(null);
     setEventId(value);
   }
 
@@ -167,6 +240,33 @@ export function ScanStation() {
             <label htmlFor="ticket-code" className="mt-5 block text-sm font-medium text-zinc-200">Código de entrada</label>
             <input id="ticket-code" className="field min-h-12" value={manualCode} onChange={(event) => setManualCode(event.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="64 caracteres" />
             <button type="submit" className="secondary-button mt-5 min-h-14 w-full text-lg" disabled={pending || !manualCode.trim()}>{pending ? "Validando…" : "Validar código"}</button>
+          </form>
+
+          <form className="event-detail-card mt-8" onSubmit={(event) => { event.preventDefault(); void searchByEmail(); }}>
+            <h2 className="text-xl font-bold">Buscar asistente por email</h2>
+            <p className="mt-2 text-sm text-zinc-300">Usalo cuando el QR y el código de respaldo no se puedan leer.</p>
+            <label htmlFor="attendee-email" className="mt-5 block text-sm font-medium text-zinc-200">Email del asistente</label>
+            <input id="attendee-email" type="email" className="field min-h-12" value={searchEmail} onChange={(event) => {
+              setSearchEmail(event.target.value);
+              searchSequenceRef.current += 1;
+              setEmailSearchState("idle");
+              setEmailSearchResult(null);
+            }} autoComplete="email" maxLength={320} placeholder="nombre@ejemplo.com" />
+            <button type="submit" className="secondary-button mt-5 min-h-14 w-full text-lg" disabled={pending || emailSearchState === "loading" || !searchEmail.trim()}>{emailSearchState === "loading" ? "Buscando…" : "Buscar asistente"}</button>
+            <div className="mt-5" aria-live="polite">
+              {emailSearchState === "loading" && <p className="text-zinc-400">Buscando asistente…</p>}
+              {emailSearchState === "error" && <p className="text-red-200">No pudimos completar la búsqueda. Revisá el email e intentá nuevamente.</p>}
+              {emailSearchState === "notFound" && <p className="text-zinc-300">No encontramos un asistente con ese email en este evento.</p>}
+              {emailSearchState === "found" && emailSearchResult && <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+                <p className="text-xl font-bold text-white">{emailSearchResult.attendeeName}</p>
+                <p className="mt-1 break-all text-sm text-zinc-300">{emailSearchResult.email}</p>
+                <p className="mt-2 text-sm text-zinc-300">{emailSearchResult.ticketTypeName}</p>
+                <p className={`mt-3 text-sm font-semibold ${emailSearchResult.ticketStatus === "valid" ? "text-emerald-300" : emailSearchResult.ticketStatus === "used" ? "text-amber-300" : "text-red-200"}`}>
+                  {emailSearchResult.ticketStatus === "valid" ? "Entrada válida" : emailSearchResult.ticketStatus === "used" ? "Entrada usada" : "Entrada revocada"}
+                </p>
+                {emailSearchResult.ticketStatus !== "revoke" && <button type="button" className="primary-button mt-5 min-h-14 w-full text-lg" disabled={pending || emailSearchResult.ticketStatus === "used"} onClick={() => void checkIn(emailSearchResult.ticketCode, "email")}>{pending ? "Confirmando…" : emailSearchResult.ticketStatus === "used" ? "Ingreso ya registrado" : "Confirmar ingreso"}</button>}
+              </div>}
+            </div>
           </form>
         </>)}
       </div>
