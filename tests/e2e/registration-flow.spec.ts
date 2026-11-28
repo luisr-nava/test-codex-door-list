@@ -1,6 +1,7 @@
 import { createServer, type Server } from "node:http";
 import { once } from "node:events";
 import { test, expect } from "@playwright/test";
+import { cleanOrganizerEvent } from "../db/event-fixture.mjs";
 
 type EmailPayload = {
   to: string[];
@@ -36,7 +37,6 @@ test("publicar, registrar, recibir la entrada y validar el ingreso", async ({ pa
   const ticketType = `General ${unique}`;
   const attendeeName = `Asistente ${unique}`;
   const attendeeEmail = `asistente-${unique}@example.test`;
-  let eventCard: ReturnType<typeof page.locator> | null = null;
 
   try {
     await page.goto("/organizador");
@@ -60,7 +60,7 @@ test("publicar, registrar, recibir la entrada y validar el ingreso", async ({ pa
     await eventForm.getByRole("button", { name: "Guardar evento" }).click();
     await expect(page.getByText("Evento creado.")).toBeVisible();
 
-    eventCard = page.locator("article").filter({ hasText: eventTitle });
+    const eventCard = page.locator("article").filter({ hasText: eventTitle });
     await expect(eventCard).toBeVisible();
     const registrationUrl = await eventCard.getByRole("link", { name: "Abrir registro" }).getAttribute("href");
     expect(registrationUrl).toMatch(/^\/eventos\/[0-9a-f-]{36}\/registro$/);
@@ -96,8 +96,10 @@ test("publicar, registrar, recibir la entrada y validar el ingreso", async ({ pa
     expect(Buffer.from(emails[0].attachments[0].content, "base64").subarray(0, 8).toString("hex"))
       .toBe("89504e470d0a1a0a");
 
-    await page.getByRole("link", { name: "Ver mi entrada" }).click();
-    await expect(page).toHaveURL(new RegExp(`/entradas/${ticketCode}$`));
+    await Promise.all([
+      page.waitForURL((url) => url.pathname === `/entradas/${ticketCode}`),
+      page.getByRole("link", { name: "Ver mi entrada" }).click(),
+    ]);
     await expect(page.getByRole("img", { name: new RegExp("Código QR") })).toBeVisible();
     await expect(page.getByText(attendeeEmail)).toBeVisible();
     await expect(page.getByText("Válida", { exact: true })).toBeVisible();
@@ -106,23 +108,30 @@ test("publicar, registrar, recibir la entrada y validar el ingreso", async ({ pa
     await expect(page.getByRole("heading", { name: "Escanear entradas" })).toBeVisible();
     await page.getByLabel("Evento").selectOption({ label: eventTitle });
     await page.getByLabel("Código de entrada").fill(ticketCode);
-    await page.getByRole("button", { name: "Validar código" }).click();
+    const [checkIn] = await Promise.all([
+      page.waitForResponse((response) =>
+        response.url().endsWith("/check-in") && response.request().method() === "POST"),
+      page.getByRole("button", { name: "Validar código" }).click(),
+    ]);
+    expect(checkIn.status()).toBe(200);
     await expect(page.getByRole("heading", { name: "Entrada válida" })).toBeVisible();
     await expect(page.getByText(attendeeName)).toBeVisible();
 
     await page.goto(`/entradas/${ticketCode}`);
     await expect(page.getByText("Usada", { exact: true })).toBeVisible();
+
+    await page.goto("/organizador");
+    const soldCard = page.locator("article").filter({ hasText: eventTitle });
+    await expect(soldCard).toBeVisible();
+    page.once("dialog", (dialog) => dialog.accept());
+    await soldCard.getByRole("button", { name: "Eliminar" }).click();
+    await expect(page.getByText("No se puede eliminar el evento porque ya tiene 1 entrada vendida", { exact: true }))
+      .toBeVisible();
+    await expect(soldCard).toBeVisible();
+    await page.goto(`/entradas/${ticketCode}`);
+    await expect(page.getByText("Usada", { exact: true })).toBeVisible();
   } finally {
-    // The organizer can remove its own fixture through the normal product flow.
-    if (eventCard) {
-      await page.goto("/organizador");
-      const card = page.locator("article").filter({ hasText: eventTitle });
-      if (await card.isVisible()) {
-        page.once("dialog", (dialog) => dialog.accept());
-        await card.getByRole("button", { name: "Eliminar" }).click();
-        await expect(card).toHaveCount(0);
-      }
-    }
     mailServer.close();
+    cleanOrganizerEvent(eventTitle, process.env.E2E_ORGANIZER_EMAIL!);
   }
 });

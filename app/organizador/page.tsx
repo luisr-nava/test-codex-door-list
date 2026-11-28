@@ -30,6 +30,18 @@ function readableError(error: { message: string } | null) {
   return "No pudimos completar la operación. Intenta nuevamente.";
 }
 
+function readableEventDeletionError(error: { code: string; message: string; details: string | null }) {
+  if (error.code === "PT409" && error.message === "EVENT_HAS_SOLD_TICKETS") {
+    const soldCount = Number(error.details);
+    if (soldCount > 0 && Number.isSafeInteger(soldCount) && String(soldCount) === error.details) {
+      const tickets = soldCount === 1 ? "entrada vendida" : "entradas vendidas";
+      return `No se puede eliminar el evento porque ya tiene ${soldCount} ${tickets}`;
+    }
+  }
+
+  return readableError(error);
+}
+
 export default function OrganizerPage() {
   const [supabase] = useState(() => createSupabaseClient());
   const [session, setSession] = useState<Session | null>(null);
@@ -50,6 +62,7 @@ export default function OrganizerPage() {
   const [ticketMessage, setTicketMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   const selectedEvent =
     events.find((event) => event.id === selectedEventId) ?? null;
@@ -77,7 +90,7 @@ export default function OrganizerPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return null;
     const { data: eventsData, error: eventsError } = await supabase
       .from("events")
       .select("id, title, description, starts_at, venue, max_capacity, status")
@@ -86,7 +99,7 @@ export default function OrganizerPage() {
 
     if (eventsError) {
       setMessage(readableError(eventsError));
-      return;
+      return null;
     }
     const eventIds = (eventsData ?? []).map((event) => event.id);
     const { data: ticketsData, error: ticketsError } = eventIds.length
@@ -99,10 +112,11 @@ export default function OrganizerPage() {
 
     if (ticketsError) {
       setMessage(readableError(ticketsError));
-      return;
+      return null;
     }
     setEvents((eventsData ?? []).map(mapEvent));
     setTickets((ticketsData ?? []).map(mapTicketType));
+    return eventIds;
   }
 
   useEffect(() => {
@@ -232,19 +246,29 @@ export default function OrganizerPage() {
       !window.confirm("¿Eliminar este evento y sus tipos de entrada?")
     )
       return;
+    setMessage("");
     setSaving(true);
+    setDeletingEventId(eventId);
     try {
-      const { error } = await supabase.from("events").delete().eq("id", eventId);
-      if (error) setMessage(readableError(error));
-      else {
-        await loadOrganizerData();
+      const { data, error } = await supabase.from("events").delete().eq("id", eventId).select("id");
+      if (error) {
+        setMessage(readableEventDeletionError(error));
+        return;
+      }
+
+      const deleted = data?.some(({ id }) => id === eventId) ?? false;
+      const refreshedEventIds = await loadOrganizerData();
+      if (deleted || (refreshedEventIds && !refreshedEventIds.includes(eventId))) {
         if (eventId === selectedEventId) setSelectedEventId(null);
         if (eventId === editingEventId) startNewEvent();
-        setMessage("Evento eliminado.");
       }
+      setMessage(deleted
+        ? "Evento eliminado."
+        : "No se pudo eliminar el evento. Puede que ya no esté disponible.");
     } catch {
       setMessage("No pudimos completar la operación. Intenta nuevamente.");
     } finally {
+      setDeletingEventId(null);
       setSaving(false);
     }
   }
@@ -409,13 +433,13 @@ export default function OrganizerPage() {
           </button>
         </div>
       </header>
-      {message && (
-        <p
-          aria-live="polite"
-          className="mt-8 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-300">
-          {message}
-        </p>
-      )}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        {message && (
+          <p className="mt-8 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-300">
+            {message}
+          </p>
+        )}
+      </div>
       <div className="mt-8 space-y-8">
         <section className="grid gap-8 xl:grid-cols-2">
           <form
@@ -520,7 +544,7 @@ export default function OrganizerPage() {
                   disabled={saving}
                   onClick={() => removeEvent()}
                   className="text-sm text-red-300 hover:text-red-200">
-                  Eliminar
+                  {deletingEventId === editingEvent.id ? "Eliminando…" : "Eliminar"}
                 </button>
               )}
             </div>
@@ -747,7 +771,7 @@ export default function OrganizerPage() {
                         void removeEvent(event.id);
                       }}
                       className="text-sm font-semibold text-red-300 hover:text-red-200">
-                      Eliminar
+                      {deletingEventId === event.id ? "Eliminando…" : "Eliminar"}
                     </button>
                     <Link
                       href={`/eventos/${event.id}/registro`}

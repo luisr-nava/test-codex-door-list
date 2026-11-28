@@ -34,6 +34,12 @@ RLS está habilitado en `events`, `ticket_types` y `registrations`.
 - `tickets`: sin privilegios directos para `anon`; los usuarios autenticados solo pueden leer tickets de eventos propios mediante RLS. La lectura pública por código ocurre exclusivamente mediante `get_public_ticket(text)`.
 - Las RPC públicas tienen ejecución concedida a `anon` y `authenticated`, mientras que sus privilegios directos sobre `registrations` permanecen revocados.
 
+## Protección al eliminar eventos
+
+- El trigger `BEFORE DELETE` de `events` cuenta las entradas emitidas a través de `registrations`, incluidos los estados `valid`, `used` y `revoke`. Un registro sin entrada emitida aporta cero.
+- Si hay ventas, PostgreSQL rechaza el borrado antes de aplicar las cascadas y devuelve `PT409`, `EVENT_HAS_SOLD_TICKETS` y el total exacto en el detalle. La función interna tiene `EXECUTE` revocado para `PUBLIC`, `anon` y `authenticated`.
+- En `READ COMMITTED`, el borrado espera el bloqueo de fila de `create_public_registration` y el trigger ve la venta si la emisión confirma primero. Si confirma primero el borrado, la RPC devuelve `EVENT_UNAVAILABLE`. Cuando la cascada detecta una venta que quedó fuera de la instantánea del borrado, PostgreSQL revierte la transacción con `40001`. Un nuevo intento obtiene el conflicto con el total.
+
 ## Migraciones existentes
 
 - `20261125000000_create_events_and_tickets_types.sql`: crea enum, eventos, tipos de entrada, triggers, restricciones iniciales, grants y políticas RLS.
@@ -47,3 +53,4 @@ RLS está habilitado en `events`, `ticket_types` y `registrations`.
 - `20261126000006_fix_ticket_type_capacity_trigger.sql`: aplicada; actualiza la función del trigger de capacidad para consultar `ticket_types`.
 - `20261126000009_add_public_event_availability_summary.sql`: añade a la RPC pública de eventos el resumen de tipos de entrada disponibles y plazas restantes.
 - `20261126000010_add_ticket_check_in.sql`: aplicada; agrega `tickets.checked_in_at` y la RPC autenticada `check_in_ticket`, que comprueba la propiedad del evento y marca el uso de forma atómica.
+- `20261128000001_protect_sold_events.sql`: protege el borrado de eventos con entradas emitidas y comunica el total al panel.

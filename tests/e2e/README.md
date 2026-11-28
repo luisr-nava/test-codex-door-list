@@ -3,11 +3,13 @@
 La prueba de Playwright recorre el panel del organizador, publica un evento,
 agrega un tipo de entrada, registra un asistente, comprueba el email y el QR
 adjunto, abre la entrada y valida su ingreso desde `/scan` mediante el código
-de respaldo. El evento de prueba se elimina desde el panel al finalizar.
+de respaldo. Comprueba que el panel rechaza el borrado del evento con la entrada usada.
+
+Las pruebas de eliminación verifican el contrato de PostgREST, los avisos del panel para una y tres ventas, una entrada revocada, el borrado con cero ventas y una emisión concurrente con un borrado real desde el panel. La limpieza elimina únicamente los datos de cada fixture en el contenedor local.
 
 Requisitos:
 
-- Supabase local con las migraciones del proyecto aplicadas.
+- Supabase local con las migraciones del proyecto aplicadas. Las fixtures de eliminación usan el `psql` del contenedor `supabase_db_door-list` mediante el contexto local `default` de Docker.
 - Chromium de Playwright instalado (`npx playwright install chromium`).
 
 Ejecutá `npm run test:e2e` desde la raíz del proyecto. El comando obtiene
