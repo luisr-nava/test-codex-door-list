@@ -8,6 +8,12 @@
 
 **Input**: Feature 002. Proteger los eventos con ventas confirmadas y explicar al organizador por qué se rechaza su eliminación.
 
+## Clarifications
+
+### Session 2026-11-28
+
+- Q: ¿Qué reglas de aforo debe usar la Feature 002 para verificar que la protección de eventos con ventas conserva el comportamiento esperado? → A: Las reglas de aforo y de venta vigentes en la rama activa, documentadas en `docs/database.md` y `docs/business-rules.md`. La Feature 002 se limita a impedir la eliminación de eventos con entradas vendidas y preservar la integridad de sus datos.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Proteger eventos con ventas (Priority: P1)
@@ -54,6 +60,7 @@ Como organizador, quiero poder eliminar un evento sin ventas confirmadas mediant
 
 1. **Dado** un evento propio con 0 entradas vendidas y que cumple las demás condiciones de eliminación, **cuando** el organizador lo elimina, **entonces** la eliminación se completa mediante el flujo habitual.
 2. **Dado** un evento con 0 entradas vendidas y un registro en curso, **cuando** la eliminación se completa antes de que se confirme la venta, **entonces** el evento queda eliminado y ese registro no puede terminar con una entrada vendida para el evento eliminado.
+3. **Dado** que el panel sigue mostrando un evento eliminado desde otra sesión, **cuando** el organizador intenta borrarlo, **entonces** se actualiza el listado y el panel informa que el evento no se pudo eliminar.
 
 ---
 
@@ -67,13 +74,14 @@ Como organizador, quiero poder eliminar un evento sin ventas confirmadas mediant
 
 ### Functional Requirements
 
-- **FR-001** — Permitir eliminar mediante el flujo habitual un evento con 0 entradas vendidas si el solicitante está autorizado y se cumplen las demás condiciones de eliminación.
+- **FR-001** — Permitir eliminar mediante el flujo habitual un evento con 0 entradas vendidas si el solicitante está autorizado y se cumplen las demás condiciones de eliminación. El panel muestra «Evento eliminado.» únicamente si la operación devuelve el ID del evento eliminado. Si no devuelve ninguna fila, el panel recarga el listado y muestra «No se pudo eliminar el evento. Puede que ya no esté disponible.», tanto para un evento ausente como para uno no accesible.
 - **FR-002** — Rechazar la eliminación si el evento tiene al menos 1 entrada vendida en el momento de concretar la operación. El total debe sumar las entradas de todos sus tipos, con una unidad por cada venta confirmada, aunque la entrada se haya usado o revocado.
 - **FR-003** — Aplicar la protección a todo intento de eliminación, cualquiera sea su origen.
 - **FR-004** — Si una venta se confirma antes de que la eliminación se concrete, incluirla en el total utilizado para decidir el resultado. Si la eliminación se concreta primero, ningún registro en curso puede concluir después con una venta confirmada para ese evento.
 - **FR-005** — Al rechazar la eliminación por ventas, conservar intactos el evento y todas sus entradas.
-- **FR-006** — Al rechazar la eliminación por ventas, informar al organizador en español que el evento no puede eliminarse porque ya tiene entradas vendidas. El mensaje debe indicar el total exacto que motivó el rechazo y usar singular para 1 entrada y plural a partir de 2.
-- **FR-007** — Mantener el flujo de venta, las reglas de aforo de la Feature 001 y los permisos de eliminación vigentes. El recuento de esta protección se aplica a la decisión de eliminar y al mensaje asociado.
+- **FR-006** — Al rechazar la eliminación por ventas, informar al organizador en español que el evento no puede eliminarse porque ya tiene entradas vendidas. El mensaje debe indicar el total exacto que motivó el rechazo y usar singular para 1 entrada y plural a partir de 2. El panel anuncia el resultado sin desplazar el foco, mediante una región de estado presente antes de la operación.
+- **FR-007** — El control de borrado debe conservar los permisos de eliminación vigentes y el comportamiento actual del aforo y la venta al registrar o emitir entradas. El recuento de ventas se aplica a la decisión de eliminar y al mensaje asociado.
+- **FR-008** — Mientras se procesa el borrado, los controles de eliminación del evento en curso están deshabilitados y muestran «Eliminando…». Al finalizar, los controles que sigan presentes recuperan su etiqueta habitual.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -94,4 +102,4 @@ Como organizador, quiero poder eliminar un evento sin ventas confirmadas mediant
 ## Assumptions
 
 - Para esta protección, una entrada vendida equivale a una venta confirmada por el flujo de venta vigente. La revocación posterior conserva el antecedente de la venta para la decisión de eliminar.
-- La Feature 001 es la referencia para el aforo. Esta especificación no redefine sus resultados ni las condiciones para confirmar una venta.
+- Las reglas de aforo y de venta vigentes en la rama activa, documentadas en [esquema y reglas de base de datos](../../docs/database.md) y [reglas de negocio](../../docs/business-rules.md), son la referencia para las pruebas de regresión.

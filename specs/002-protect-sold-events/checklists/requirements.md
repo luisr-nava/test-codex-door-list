@@ -20,7 +20,7 @@
 - [x] Están cubiertos los seis criterios de aceptación solicitados.
 - [x] Se contemplan los registros pendientes, las ventas simultáneas y las entradas revocadas.
 - [x] El alcance se limita a la protección al eliminar eventos.
-- [x] Los supuestos y la dependencia de las reglas de aforo de la Feature 001 son explícitos.
+- [x] FR-007 y los supuestos identifican las reglas de aforo y venta vigentes de la rama como referencia para las pruebas de regresión.
 
 ## Feature Readiness
 
